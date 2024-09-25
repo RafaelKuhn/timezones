@@ -40,3 +40,8 @@ svg {
 /* #path2995:hover {
 	fill: #ff0000;
 } */
+
+
+.nocountry {
+	pointer-events: none;
+}

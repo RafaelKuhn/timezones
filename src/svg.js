@@ -5,7 +5,7 @@ import { svg } from "/src/svg_files/newest_svg.js"
 
 import { SVG } from "./svg.min.js"
 
-import { ZONE, svgsByZone } from "./countries.js";
+import { ZONE, svgsByZone, colorsByZone } from "./countries.js";
 
 
 
@@ -142,23 +142,17 @@ console.assert(splitUrl.length >= 1, "should have an url");
 
 let debugMode = false;
 let prod = false;
+let fillWholeMap = false;
 
 if (splitUrl.length > 1) {
 	const firstSplitByQuestionMark = splitUrl[1];
 	if (firstSplitByQuestionMark.includes("debug")) debugMode = true;
 	if (firstSplitByQuestionMark.includes("prod"))  prod = true;
+	if (firstSplitByQuestionMark.includes("fill"))  fillWholeMap = true;
 }
 
 console.log(`debug mode: ${debugMode}, prod: ${prod}`);
 console.assert(!(debugMode && prod), "shouldnt have both prod and debug mode")
-
-
-
-
-
-if (prod) {
-
-}
 
 
 
@@ -184,29 +178,34 @@ nowHovering => {
 const trySetLastHovered = debugMode ? hoveredSmth => {
 	currentHoveringDbg = hoveredSmth;
 
-	if (hoveredSmth.style.fill !== grayColor) return;
+	if (hoveredSmth.style.fill !== countryColor) return;
 
 	lastHoveredDbg = hoveredSmth;
-	hoveredSmth.style.fill = hoveredColor;
-} :
-hoveredSmth => {
-	if (hoveredSmth.style.fill != grayColor) return;
 
 	const gotAttr = hoveredSmth.getAttribute(ZONE);
-	if (!gotAttr) {
-		// error
-		return;
+	if (gotAttr) {
+		hoveredSmth.style.fill = alreadyAccountedForHoveredColor;
+	} else {
+		hoveredSmth.style.fill = hoveredColor;
 	}
+} :
+hoveredSmth => {
+	if (hoveredSmth.style.fill != countryColor) return;
+
+	const gotAttr = hoveredSmth.getAttribute(ZONE);
+	if (!gotAttr) return;
 
 	const gmtSvgs = svgsByZone.get(gotAttr);
 	if (!gmtSvgs) {
 		// error
+		console.error(`UNEXPECTED ERROR!`);
 		return;
 	}
 
 	// TODO: check for same gmt was hovered and don't redo work
 	for (const gmtSvg of gmtSvgs) {
-		gmtSvg.style.fill = hoveredColor;
+		const color = colorsByZone.get(gotAttr);
+		gmtSvg.style.fill = color;
 	}
 
 	lastHoveredZoneName = gotAttr;
@@ -216,7 +215,7 @@ const resetLastHovered = debugMode ? () => {
 
 	if (allClickedParts.includes(lastHoveredDbg)) return;
 
-	lastHoveredDbg.style.fill = grayColor;
+	lastHoveredDbg.style.fill = countryColor;
 	lastHoveredDbg = null;
 } :
 () => {
@@ -227,7 +226,7 @@ const resetLastHovered = debugMode ? () => {
 	}
 
 	for (const gmtSvg of gmtSvgs) {
-		gmtSvg.style.fill = grayColor;
+		gmtSvg.style.fill = countryColor;
 	}
 	
 	
@@ -249,11 +248,11 @@ document.addEventListener("mousemove", evt => {
 	rect.width = 1;
 	rect.height = 1;
 
-	const intersecting = mainSvg.getIntersectionList(rect, null);
+	const intersections = mainSvg.getIntersectionList(rect, null);
 	// console.log(`LIST: `);
 	// console.log(intersecting);
 
-	const isHoveringSmth = intersecting.length > 0
+	const isHoveringSmth = intersections.length > 0
 	if (!isHoveringSmth) {
 
 		if (hasLastHovered()) {
@@ -268,7 +267,13 @@ document.addEventListener("mousemove", evt => {
 	console.assert(isHoveringSmth, "Should be hovering smth")
 
 	// assert lastThing is a path
-	const hoveredSmth = intersecting[intersecting.length - 1];
+	const hoveredSmth = intersections[intersections.length - 1];
+	// console.log(`all: `);
+	// for (const intersection of intersections) {
+	// 	console.log(intersection);
+	// }
+	// console.log(" ");
+	
 
 	if (!hasLastHovered()) {
 		trySetLastHovered(hoveredSmth);
@@ -289,9 +294,10 @@ document.addEventListener("mousemove", evt => {
 	// hoveringSameShitAsBefore
 });
 
-const grayColor = "rgb(179, 179, 179)";
+const countryColor = "rgb(179, 179, 179)";
 
 const hoveredColor = "rgb(255, 128, 0)";
+const alreadyAccountedForHoveredColor = "rgb(200, 158, 0)";
 const clickedColor = "rgb(255, 0, 0)";
 
 const LEFT_BTN   = 0;
@@ -308,6 +314,37 @@ document.addEventListener("mouseup", evt => {
 
 	if (evt.button == LEFT_BTN) {
 
+		if (evt.shiftKey) {
+
+			// if ctrl key, join all the things in their zone
+
+			if (allClickedParts.length === 0) {
+				console.log(`NOTHING MARKED`);
+				console.log(" ");	
+				return;
+			}
+
+			console.log("ALL:");
+
+			// let str = "const idsTODO = [\n";
+			// for (const stuff of allClickedParts) str += `"${stuff.id}",\n`
+			// str += "]"
+			// console.log(str);
+
+			let str = "const idsGmtPlus_   = [";
+			for (const stuff of allClickedParts) str += ` "${stuff.id}",`
+			str = str.slice(0, -1); // removes last ','
+			str += " ];"
+			console.log(str);
+
+			console.log(" ");
+
+
+			// console.log(`shift + down LEFT_BTN`);
+			// lastThing.group = null;
+			return;
+		}
+
 		if (evt.ctrlKey) {
 
 			if (!currentHoveringDbg) return;
@@ -322,36 +359,8 @@ document.addEventListener("mouseup", evt => {
 
 			allClickedParts.splice(ind, 1);
 
-			currentHoveringDbg.style.fill = grayColor;
+			currentHoveringDbg.style.fill = countryColor;
 
-			return;
-		}
-
-		if (evt.shiftKey) {
-			if (allClickedParts.length === 0) {
-				console.log(`NOTHING MARKED`);
-				console.log(" ");	
-				return;
-			}
-
-			console.log("ALL:");
-
-			// let str = "const idsTODO = [\n";
-			// for (const stuff of allClickedParts) str += `"${stuff.id}",\n`
-			// str += "]"
-			// console.log(str);
-
-			let str = "const idsTODO = [";
-			for (const stuff of allClickedParts) str += ` "${stuff.id}",`
-			str = str.slice(0, -1); // removes last ','
-			str += " ];"
-			console.log(str);
-
-			console.log(" ");
-
-
-			// console.log(`shift + down LEFT_BTN`);
-			// lastThing.group = null;
 			return;
 		}
 
@@ -381,16 +390,11 @@ document.addEventListener("mouseup", evt => {
 })
 
 
-const test = (x, y, wid, hei) => {
-	// viewBox.x = 
-}
-
-
 
 export {
 	initSvg, resizeSvg,
-	prod,
-	hoveredColor, clickedColor, grayColor,
+	prod, fillWholeMap,
+	hoveredColor, clickedColor, countryColor, alreadyAccountedForHoveredColor,
 	
 	
 	

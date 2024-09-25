@@ -1,7 +1,7 @@
 
-import { draw, prod,     initSvg as initSvgEvents, resizeSvg } from "/src/svg.js";
+import { draw, prod, fillWholeMap, countryColor,     initSvg as initSvgEvents, resizeSvg } from "/src/svg.js";
 
-import { assignIds } from "./countries.js";
+import { assignIds, svgsByZone, registeredSvgsSet, colorsByZone } from "/src/countries.js";
 
 
 const resize = () => {
@@ -13,6 +13,9 @@ assignIds();
 
 initSvgEvents();
 
+
+// DELETE WEIRD AREA AROUND INDIAN ISLANDS
+document.getElementById("path60").remove();
 
 
 
@@ -33,6 +36,58 @@ for (const path of paths) {
 		map.set(fill, num + 1)
 	}
 }
+
+for (const path of paths) {
+	if (path.style.fill !== countryColor) path.classList.add("nocountry")
+}
+
+
+
+window.prune = pruneRegistered => {
+	for (const path of paths) {
+		const isCountry = path.style.fill === countryColor;
+		if (!isCountry) continue;
+
+		const isRegistered = registeredSvgsSet.has(path);
+		if (pruneRegistered) {
+			if (isRegistered) path.remove()
+		} else {
+			if (!isRegistered) path.remove()
+		}
+
+	}
+}
+
+window.mark = markRegistered => {
+	if (markRegistered) {
+
+		// let it = 0;
+		const cols = 4;
+		for (const [ zoneName, paths ] of svgsByZone) {
+
+			const col = colorsByZone.get(zoneName);
+			console.log(`%c${zoneName}`, `color: ${col}`);
+			for (const path of paths) {
+				path.style.fill = col;				
+			}
+			
+			it += 1;
+		}
+
+	} else {
+	
+		for (const path of paths) {
+			const isCountry = path.style.fill === countryColor;
+			if (!isCountry) continue;
+	
+			const isRegistered = registeredSvgsSet.has(path);
+			if (!isRegistered) path.style.fill = "rgb(255, 127, 0)";
+	
+		}
+
+	}
+}
+
 
 
 
@@ -65,4 +120,5 @@ window.addEventListener("resize", _ => {
 	resize();
 });
 
- 
+
+if (fillWholeMap) window.mark(true);
