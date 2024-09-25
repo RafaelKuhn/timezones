@@ -1,6 +1,11 @@
 
+// Has UTC+05 timestamps
 // import { svg } from "/src/svg_files/original_svg.js"
+
+// Has no UTC+05 timestamps
 // import { svg } from "/src/svg_files/new_svg.js"
+
+// Has no countours
 import { svg } from "/src/svg_files/newest_svg.js"
 
 import { SVG } from "./svg.min.js"
@@ -46,7 +51,7 @@ const updateViewBoxAttribute = () => {
 }
 
 
-const initSvg = () => {
+const initSvgEvents = () => {
 
 	// draw = SVG();
 	// draw.addTo(container);
@@ -392,11 +397,9 @@ document.addEventListener("mouseup", evt => {
 
 
 export {
-	initSvg, resizeSvg,
+	initSvgEvents, resizeSvg,
 	prod, fillWholeMap,
 	hoveredColor, clickedColor, countryColor, alreadyAccountedForHoveredColor,
-	
-	
-	
-	
-	originalSvgSize,   svgJsRoot as draw };
+
+	svgJsRoot,
+};

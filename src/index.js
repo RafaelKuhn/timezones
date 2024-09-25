@@ -1,5 +1,5 @@
 
-import { draw, prod, fillWholeMap, countryColor,     initSvg as initSvgEvents, resizeSvg } from "/src/svg.js";
+import { svgJsRoot, countryColor, initSvgEvents, resizeSvg,     fillWholeMap, prod } from "/src/svg.js";
 
 import { assignIds, svgsByZone, registeredSvgsSet, colorsByZone } from "/src/countries.js";
 
@@ -20,7 +20,7 @@ document.getElementById("path60").remove();
 
 
 /** @type {Array.<SVGPathElement>} */
-const paths = draw.node.querySelectorAll("path");
+const paths = svgJsRoot.node.querySelectorAll("path");
 console.log(`found ${paths.length} paths`);
 
 
