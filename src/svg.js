@@ -10,7 +10,7 @@ import { svg } from "/src/svg_files/newest_svg.js"
 
 import { SVG } from "./svg.min.js"
 
-import { ZONE, svgsByZone, colorsByZone } from "./countries.js";
+import { ZONE, svgsByZone, colorsByZone, brightColorsByZone, timeIncrementByZone } from "./countries.js";
 
 
 
@@ -27,9 +27,12 @@ const mainSvg = svgJsRoot.node;
 
 const fix = (v, n) => v.toFixed(n);
 const fix2 = v => v.toFixed(2);
+const fix0 = v => v.toFixed(0);
 
-/** @type {{ x: Number, y: Number, wid: Number, hei: Number }} */
+/** @type {{ x: Number, y: Number, wid: Number, hei: Number, scale: Number }} */
 const attrFromVbox = vbox => `${fix(vbox.x, 2)} ${fix(vbox.y, 2)} ${fix(vbox.wid, 2)} ${fix(vbox.hei, 2)}`
+/** @type {{ x: Number, y: Number, wid: Number, hei: Number, scale: Number }} */
+const debugStrVbox = vbox => `[${fix(vbox.x, 0)}, ${fix(vbox.y, 0)}, ${fix(vbox.wid, 0)}, ${fix(vbox.hei, 0)}] sc ${vbox.scale}`
 
 
 const firstInnerNode = svgJsRoot.node.firstChild;
@@ -38,66 +41,58 @@ const resizeFirstInnerNodeFromContainer = () => {
 	firstInnerNode.setAttribute("height", container.offsetHeight);
 }
 
-const viewBox = { x: 0, y: 0, wid: mainSvg.clientWidth, hei: mainSvg.clientHeight };
+const viewBox = { x: 0, y: 0, wid: mainSvg.clientWidth, hei: mainSvg.clientHeight, scale: 1.0 };
 const originalSvgSize = { wid: mainSvg.clientWidth, hei: mainSvg.clientHeight };
 
-const updateoriginalSvgSize = () => {
+const updateOriginalSvgSize = () => {
 	originalSvgSize.wid = mainSvg.clientWidth;
 	originalSvgSize.hei = mainSvg.clientHeight;
 }
 
-const updateViewBoxAttribute = () => {
+const updateSvgViewBoxAttribute = () => {
 	mainSvg.setAttribute("viewBox", attrFromVbox(viewBox));
 }
 
 
 const initSvgEvents = () => {
 
-	// draw = SVG();
-	// draw.addTo(container);
-	// draw.svg(svg);
-
-
-	// console.log(`w ${window.innerHeight}, h ${window.innerWidth}`);
-
-	// son of "mainSvg"
-	// const node = draw.node.firstChild;
-	// node.setAttribute("width",  container.offsetWidth);
-	// node.setAttribute("height", container.offsetHeight);
-
-	// mainSvg = draw.node;
-	// viewBox = { x: 0, y: 0, wid: mainSvg.clientWidth, hei: mainSvg.clientHeight };
-
-	// updateViewBoxAndMainSvg();
-
-	// mainSvg.setAttribute("viewBox", attrFromVbox(viewBox));
-	// const originalSvgSize = { wid: mainSvg.clientWidth, hei: mainSvg.clientHeight };
-
 	document.addEventListener("wheel", wheelEvt => {
 	// svgVisibleArea.addEventListener("wheel", wheelEvt => {
 
-		const zoomSpeed = 0.05;
-		const zoomAmount = Math.sign(-wheelEvt.deltaY) * zoomSpeed;
+		const ZOOM_SPEED = 0.05;
+		const zoomAmount = Math.sign(-wheelEvt.deltaY) * ZOOM_SPEED;
 
-		const dw = viewBox.wid * zoomAmount;
-		const dh = viewBox.hei * zoomAmount;
-		const dx = dw * wheelEvt.offsetX / originalSvgSize.wid;
-		const dy = dh * wheelEvt.offsetY / originalSvgSize.hei;
+		const dWid = viewBox.wid * zoomAmount;
+		const dHei = viewBox.hei * zoomAmount;
+		const dx = dWid * wheelEvt.offsetX / originalSvgSize.wid;
+		const dy = dHei * wheelEvt.offsetY / originalSvgSize.hei;
 
-		viewBox.x += dx;
-		if (viewBox.x < 0) viewBox.x = 0;
-		viewBox.y += dy;
-		if (viewBox.y < 0) viewBox.y = 0;
-		viewBox.wid -= dw;
+		viewBox.wid -= dWid;
+		viewBox.hei -= dHei;
+
 		if (viewBox.wid > originalSvgSize.wid) viewBox.wid = originalSvgSize.wid;
-		viewBox.hei -= dh;
 		if (viewBox.hei > originalSvgSize.hei) viewBox.hei = originalSvgSize.hei;
 
-		// const scale = originalSvgSize.wid / viewBox.wid;
-		// zoomValue.innerText = `${Math.round(scale*100)/100}`;
-		// console.log(`vbox: ${fix2(viewBox.x)} ${fix2(viewBox.y)} ${fix2(viewBox.wid)} ${fix2(viewBox.hei)}, ${Math.round(scale * 100) / 100}x`);
+		viewBox.scale = originalSvgSize.wid / viewBox.wid;
 
-		updateViewBoxAttribute();
+		const MAX_SCALE = 50;
+		if (viewBox.scale > MAX_SCALE) {
+			viewBox.scale = MAX_SCALE;
+
+			viewBox.wid = originalSvgSize.wid / MAX_SCALE;
+			viewBox.hei = originalSvgSize.hei / MAX_SCALE;
+		} else {
+			// only move if not going deeper than the zoom threshold
+			viewBox.x += dx;
+			viewBox.y += dy;
+	
+			if (viewBox.x < 0) viewBox.x = 0;
+			if (viewBox.y < 0) viewBox.y = 0;
+		}
+
+		// console.log(`scale: ${viewBox.scale}, or ${fix2(viewBox.scale)}x`);
+		clampViewBoxXyToScreen();
+		updateSvgViewBoxAttribute();
 	});
 
 
@@ -110,21 +105,21 @@ const resizeSvg = () => {
 	container.height = `${window.innerHeight}px`
 	resizeFirstInnerNodeFromContainer();
 
-	updateoriginalSvgSize();
+	updateOriginalSvgSize();
 
-	// this will reset the zoom on resizing
+	// this will reset the SVG zoom on resizing the screen
 	viewBox.x = 0;
 	viewBox.y = 0;
 	viewBox.wid = mainSvg.clientWidth;
 	viewBox.hei = mainSvg.clientHeight;
 
-	updateViewBoxAttribute();
+	updateSvgViewBoxAttribute();
 }
 
 
 
-updateoriginalSvgSize();
-updateViewBoxAttribute();
+updateOriginalSvgSize();
+updateSvgViewBoxAttribute();
 
 
 
@@ -137,50 +132,36 @@ let currentHoveringDbg = null;
 
 
 
-/** @type {String} */
-let lastHoveredZoneName = null;
-
 
 const splitUrl = document.location.toString().split("?");
 console.assert(splitUrl.length >= 1, "should have an url");
 
-
-let debugMode = false;
-let prod = false;
+export let debugMode = false;
+let test = false;
 let fillWholeMap = false;
 
 if (splitUrl.length > 1) {
 	const firstSplitByQuestionMark = splitUrl[1];
 	if (firstSplitByQuestionMark.includes("debug")) debugMode = true;
-	if (firstSplitByQuestionMark.includes("prod"))  prod = true;
+	if (firstSplitByQuestionMark.includes("test"))  test = true;
 	if (firstSplitByQuestionMark.includes("fill"))  fillWholeMap = true;
 }
 
-console.log(`debug mode: ${debugMode}, prod: ${prod}`);
-console.assert(!(debugMode && prod), "shouldnt have both prod and debug mode")
+console.log(`debug mode: ${debugMode}, test: ${test}`);
+console.assert(!(debugMode && test), "shouldnt have both prod and debug mode")
 
 
 
-const hasLastHovered = debugMode ?
-() => lastHoveredDbg !== null :
-() => lastHoveredZoneName !== null;
+const hasLastHovered = 
+() => lastHoveredDbg !== null
 
-// const hasLastHovered = () => lastHoveredZoneName !== null;
-
-const isHoveringNewShit = debugMode ?
+const isHoveringNewShit =
 nowHovering => {
 	return nowHovering !== lastHoveredDbg;
-} :
-nowHovering => {
-	const gotAttr = nowHovering.getAttribute(ZONE);
-	if (!gotAttr) {
-		return true;
-	}
-
-	return gotAttr != lastHoveredZoneName;
 }
 
-const trySetLastHovered = debugMode ? hoveredSmth => {
+const trySetLastHovered =
+hoveredSmth => {
 	currentHoveringDbg = hoveredSmth;
 
 	if (hoveredSmth.style.fill !== countryColor) return;
@@ -193,67 +174,193 @@ const trySetLastHovered = debugMode ? hoveredSmth => {
 	} else {
 		hoveredSmth.style.fill = hoveredColor;
 	}
-} :
-hoveredSmth => {
-	if (hoveredSmth.style.fill != countryColor) return;
-
-	const gotAttr = hoveredSmth.getAttribute(ZONE);
-	if (!gotAttr) return;
-
-	const gmtSvgs = svgsByZone.get(gotAttr);
-	if (!gmtSvgs) {
-		// error
-		console.error(`UNEXPECTED ERROR!`);
-		return;
-	}
-
-	// TODO: check for same gmt was hovered and don't redo work
-	for (const gmtSvg of gmtSvgs) {
-		const color = colorsByZone.get(gotAttr);
-		gmtSvg.style.fill = color;
-	}
-
-	lastHoveredZoneName = gotAttr;
 }
 
-const resetLastHovered = debugMode ? () => {
+const resetLastHovered =
+() => {
 
 	if (allClickedParts.includes(lastHoveredDbg)) return;
 
 	lastHoveredDbg.style.fill = countryColor;
 	lastHoveredDbg = null;
-} :
-() => {
-	const gmtSvgs = svgsByZone.get(lastHoveredZoneName);
-	if (!gmtSvgs) {
-		console.error(`should have smth here`);
-		return;
-	}
-
-	for (const gmtSvg of gmtSvgs) {
-		gmtSvg.style.fill = countryColor;
-	}
-	
-	
-	lastHoveredZoneName = null;
 }
 
 
 
-const rect = mainSvg.createSVGRect();
+const raycastRect = mainSvg.createSVGRect();
 
-const svgVisibleArea = document.getElementById("g1");
+/** @type {String} */
+let currentHoveringZone = null;
+
+const mouseEnterOcean = _ => {
+	const hadZone = currentHoveringZone !== null;
+	if (hadZone) {
+		resetZoneHighlight(currentHoveringZone);
+		currentHoveringZone = null;
+	}
+}
+
+const resetZoneHighlight = zoneName => {
+	const svgs = svgsByZone.get(zoneName);
+	console.assert(!!svgs)
+
+	for (const svg of svgs) {
+		const color = colorsByZone.get(zoneName);
+		svg.style.fill = color;
+	}
+}
+
+const highlightZone = zoneName => {
+	const svgs = svgsByZone.get(zoneName);
+	console.assert(!!svgs)
+
+	for (const svg of svgs) {
+		const color = brightColorsByZone.get(zoneName);
+		svg.style.fill = color;
+	}
+}
+
+const mouseEnterCountryPath = path => {
+	// check if path is flagged as clicked
+
+	// console.log(`entered path ${path}`);
+
+	const timezoneAttrib = path.getAttribute(ZONE);
+	console.assert(!!timezoneAttrib, "should only capture enter path on timezoned area")
+	// if (!timezoneAttrib) {
+	// 	const hadPath = currentHoveringZone !== null;
+	// 	if (hadPath) resetZoneHighlight(currentHoveringZone);
+	// 	currentHoveringZone = null;
+	// 	return;
+	// }
+
+
+	const hadZone = currentHoveringZone !== null;
+	const newZoneIsDifferentFromLastOne = currentHoveringZone !== timezoneAttrib;
+
+	if (newZoneIsDifferentFromLastOne) {
+		if (hadZone) {
+			// console.log(`reset highlight from zone ${currentHoveringZone}`);
+			resetZoneHighlight(currentHoveringZone);
+		}
+		// console.log(`highlight zone ${timezoneAttrib}`);
+
+		currentHoveringZone = timezoneAttrib;
+		highlightZone(timezoneAttrib);
+	}
+
+	// console.log(`same zone as before to ${timezoneAttrib}`);
+}
+
+const twoDigs = num => {
+	// if (num < 0) num = -num;
+	num = Math.abs(num)
+	return `${Math.trunc(num / 10)}${Math.trunc(num % 10)}`
+};
+
+
+// TODO: Implement
+const clickedPaths = [];
+
+let startZone = null;
+let endinZone = null;
+
+
+const mouseClickZone = path => {
+	const timezoneAttrib = path.getAttribute(ZONE);
+	console.assert(!!timezoneAttrib, "should only capture click on timezoned area")
+	
+	const rawIncrement = timeIncrementByZone.get(timezoneAttrib);
+
+	const incrementHours = Math.trunc(rawIncrement);
+	const incrementMins  = rawIncrement % 1 * 60.0;
+
+	const col = colorsByZone.get(timezoneAttrib);
+	console.log(`clicked zone %c${timezoneAttrib}%c\nincrement of ${incrementHours}:${twoDigs(incrementMins%60)} (raw '${rawIncrement}')`, `color: ${col}`, `\\x1b[0m`);
+}
+
+
+const clampViewBoxXyToScreen = () => {
+	if (viewBox.x <= 0) viewBox.x = 0;
+	if (viewBox.y <= 0) viewBox.y = 0;
+
+	const zoomedWid = originalSvgSize.wid / viewBox.scale;
+	const zoomedHei = originalSvgSize.hei / viewBox.scale;
+
+	// console.log(`pane dx in [${fix0(viewBox.x)}, ${fix0(viewBox.y)}] wid ${fix0(originalSvgSize.wid)} zoomed: ${fix0(zoomedWid)}\n` +
+	// 	`${(viewBox.x + zoomedWid)} > ${originalSvgSize.wid} ? ${((viewBox.x + zoomedWid) >= originalSvgSize.wid)}`);
+	if ((viewBox.x + zoomedWid) >= originalSvgSize.wid) viewBox.x = originalSvgSize.wid - zoomedWid;
+	if ((viewBox.y + zoomedHei) >= originalSvgSize.hei) viewBox.y = originalSvgSize.hei - zoomedHei;
+}
+
+
+
+
+let isPanning = false;
+
+const paneMouseStart = { x: -1, y: -1 }
+const paneStart = { x: -1, y: -1 }
+
+/** @param {MouseEvent} evt */
+const updatePanning = evt => {
+	if (!isPanning) return;
+
+	console.assert(paneStart.x !== -1 && paneStart.y !== -1, "wtf");
+	console.assert(paneMouseStart.x !== -1 && paneMouseStart.y !== -1, "wtf");
+
+	// console.log(`pane start in [${fix(paneStart.x, 0)}, ${fix(paneStart.y, 0)}]`);
+	const dx = evt.clientX - paneMouseStart.x;
+	const dy = evt.clientY - paneMouseStart.y;
+	// console.log(`pane dx in [${fix(dx, 0)}, ${fix(dy, 0)}]`);
+
+	viewBox.x = paneStart.x - dx / viewBox.scale;
+	viewBox.y = paneStart.y - dy / viewBox.scale;
+
+	clampViewBoxXyToScreen();
+}
+
+const applyPanning = () => {
+	if (isPanning) updateSvgViewBoxAttribute();
+	requestAnimationFrame(applyPanning);
+}
+
+const onLostFocus = _ => {
+	console.log(`lost focus`);
+	isPanning = false;
+}
+
+document.addEventListener("blur", onLostFocus);
+window.addEventListener("blur", onLostFocus);
+
+document.addEventListener("mousedown", evt => {
+	if (evt.button == MIDDLE_BTN) {
+
+		console.log(`panning MIDDLE_BTN`);
+		isPanning = true;
+		paneMouseStart.x = evt.clientX;
+		paneMouseStart.y = evt.clientY;
+		paneStart.x = viewBox.x;
+		paneStart.y = viewBox.y;
+	}
+});
+
+
+// const svgVisibleArea = document.getElementById("g1");
 // svgVisibleArea.addEventListener("mousemove", evt => {
 document.addEventListener("mousemove", evt => {
 
-	if (prod) return;
+	updatePanning(evt);
 
-	rect.x = evt.clientX;
-	rect.y = evt.clientY;
-	rect.width = 1;
-	rect.height = 1;
+	if (!debugMode) return;
 
-	const intersections = mainSvg.getIntersectionList(rect, null);
+	if (test) return;
+
+	raycastRect.x = evt.clientX;
+	raycastRect.y = evt.clientY;
+	raycastRect.width = 1;
+	raycastRect.height = 1;
+
+	const intersections = mainSvg.getIntersectionList(raycastRect, null);
 	// console.log(`LIST: `);
 	// console.log(intersecting);
 
@@ -302,6 +409,7 @@ document.addEventListener("mousemove", evt => {
 const countryColor = "rgb(179, 179, 179)";
 
 const hoveredColor = "rgb(255, 128, 0)";
+
 const alreadyAccountedForHoveredColor = "rgb(200, 158, 0)";
 const clickedColor = "rgb(255, 0, 0)";
 
@@ -315,7 +423,7 @@ const allClickedParts = [];
 document.addEventListener("mouseup", evt => {
 // svgVisibleArea.addEventListener("mousedown", evt => {
 
-	if (prod) return;
+	if (test) return;
 
 	if (evt.button == LEFT_BTN) {
 
@@ -386,20 +494,26 @@ document.addEventListener("mouseup", evt => {
 	}
 
 	if (evt.button == MIDDLE_BTN) {
-		console.log(`down MIDDLE_BTN`);
+
+		console.log(`up MIDDLE_BTN`);
+		isPanning = false;
 
 		return;
 	}
 
-	
-})
 
+});
+
+
+requestAnimationFrame(applyPanning);
 
 
 export {
 	initSvgEvents, resizeSvg,
-	prod, fillWholeMap,
+	test as prod, fillWholeMap,
 	hoveredColor, clickedColor, countryColor, alreadyAccountedForHoveredColor,
 
 	svgJsRoot,
+
+	mouseEnterCountryPath as mouseEnterPath, mouseEnterOcean, mouseClickZone as mouseClickPath,
 };

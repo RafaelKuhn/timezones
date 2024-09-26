@@ -1,5 +1,8 @@
 
-import { svgJsRoot, countryColor, initSvgEvents, resizeSvg,     fillWholeMap, prod } from "/src/svg.js";
+import { ZONE } from "./countries.js";
+import { svgJsRoot,countryColor, initSvgEvents, resizeSvg,     fillWholeMap, prod, mouseEnterOcean, debugMode }
+from "./svg.js";
+//  from "/src/svg.js";
 
 import { assignIds, svgsByZone, registeredSvgsSet, colorsByZone } from "/src/countries.js";
 
@@ -19,27 +22,48 @@ document.getElementById("path60").remove();
 
 
 
+
+
 /** @type {Array.<SVGPathElement>} */
 const paths = svgJsRoot.node.querySelectorAll("path");
 console.log(`found ${paths.length} paths`);
 
 
+const waterColor    = "rgb(236, 236, 236)";
+const newWaterColor = "rgb(198, 236, 255)";
 
 const map = new Map();
 for (const path of paths) {
-	const fill = path.style.fill;
 
-	const num = map.get(fill);
+	const num = map.get(path.style.fill);
 	if (!num) {
-		map.set(fill, 1)
+		map.set(path.style.fill, 1)
 	} else {
-		map.set(fill, num + 1)
+		map.set(path.style.fill, num + 1)
 	}
+
+	// FIX WATER COLOR TO A BLUEYSH
+	if (path.style.fill === countryColor) {
+
+		// REMOVE NON MARKED COUNTRIES
+		const isCountry = !!path.getAttribute(ZONE);
+		if (!isCountry) path.remove();
+		
+	} else if (path.style.fill === waterColor) {
+		// path.classList.add("water")
+
+		path.addEventListener("mouseenter", evt => mouseEnterOcean(evt.target));
+		path.style.fill = newWaterColor;
+	} else {
+		path.classList.add("no-svg-events");
+	}
+
 }
 
-for (const path of paths) {
-	if (path.style.fill !== countryColor) path.classList.add("nocountry")
-}
+document.getElementById("path15774").style.fill = "beige";
+document.getElementById("path15775").style.fill = "black";
+
+
 
 
 
@@ -66,7 +90,7 @@ window.mark = markRegistered => {
 		for (const [ zoneName, paths ] of svgsByZone) {
 
 			const col = colorsByZone.get(zoneName);
-			console.log(`%c${zoneName}`, `color: ${col}`);
+			// console.log(`%c${zoneName}`, `color: ${col}`);
 			for (const path of paths) {
 				path.style.fill = col;				
 			}
@@ -79,10 +103,10 @@ window.mark = markRegistered => {
 		for (const path of paths) {
 			const isCountry = path.style.fill === countryColor;
 			if (!isCountry) continue;
-	
+
 			const isRegistered = registeredSvgsSet.has(path);
-			if (!isRegistered) path.style.fill = "rgb(255, 127, 0)";
-	
+			if (!isRegistered) path.style.fill = "rgb(255, 0, 0)";
+
 		}
 
 	}
@@ -121,4 +145,5 @@ window.addEventListener("resize", _ => {
 });
 
 
-if (fillWholeMap) window.mark(true);
+if (!debugMode)
+	window.mark(true);

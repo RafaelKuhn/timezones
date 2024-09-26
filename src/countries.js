@@ -1,5 +1,6 @@
 
-import { prod, hoveredColor, clickedColor, countryColor } from "/src/svg.js";
+import { debugMode, mouseEnterPath, hoveredColor, clickedColor, countryColor, mouseClickPath } from "./svg.js";
+// from "/src/svg.js";
 
 
 export const ZONE = "zone";
@@ -13,17 +14,27 @@ export const svgsByZone = new Map();
 export const registeredSvgsSet = new Set();
 
 export const colorsByZone = new Map();
+export const brightColorsByZone = new Map();
+
+export const timeIncrementByZone = new Map();
 
 
 const BLUE   = "rgb(0, 90, 200)";
 const CYAN   = "rgb(20, 210, 220)";
 const ORANGE = "rgb(250, 120, 80)";
-const YELLOW = "rgb(201, 201, 24)";
-const BRIGHT_PINK   = "rgb(255, 150, 150)";
-const PINK = "rgb(255, 87, 87)";
+const YELLOW = "rgb(217, 217, 45)";
+const PINK   = "rgb(232, 64, 64)";
+
+
+const B_BLUE   = "rgb(60, 150, 255)";
+const B_CYAN   = "rgb(80, 255, 255)";
+const B_ORANGE = "rgb(255, 180, 120)";
+const B_YELLOW = "rgb(245, 245, 24)";
+const B_PINK   = "rgb(255, 150, 150)";
 
 const colorByColorIndex = index => {
-	if (index === -1) return BRIGHT_PINK;
+	// if (index === -1) return BRIGHT_PINK;
+	if (index === -1) return PINK;
 	if (index === -2) return PINK;
 
 	const mod = index % 4;
@@ -35,15 +46,32 @@ const colorByColorIndex = index => {
 	console.error(`unregistered color for index ${index}`)
 }
 
+const selectedColorByColorIndex = index => {
+	if (index === -1) return B_PINK;
+	if (index === -2) return B_PINK;
+	// if (index === -2) return PINK;
+
+	const mod = index % 4;
+	if (mod === 0) return B_BLUE;
+	if (mod === 1) return B_CYAN;
+	if (mod === 2) return B_ORANGE;
+	if (mod === 3) return B_YELLOW;
+
+	console.error(`unregistered color for index ${index}`)
+}
+
 /**
  * 
  * @param {String} gmtName
  * @param {Array.<String>} gmtIdsArray
  */
-const assignIdsTo = (gmtName, gmtIdsArray, colIndex) => {
+const assignIdsTo = (gmtName, gmtIdsArray, colIndex, increment) => {
+	console.assert(typeof  increment != "undefined", "FORGOT INC");
 
-	const color = colorByColorIndex(colIndex);
-	colorsByZone.set(gmtName, color);
+	colorsByZone.set(gmtName, colorByColorIndex(colIndex));
+	brightColorsByZone.set(gmtName, selectedColorByColorIndex(colIndex));
+
+	timeIncrementByZone.set(gmtName, increment);
 
 	const alreadyThere = svgsByZone.get(gmtName);
 
@@ -65,15 +93,17 @@ const assignIdsTo = (gmtName, gmtIdsArray, colIndex) => {
 
 		registeredSvgsSet.add(svg);
 
-		if (prod) {
+
+		if (!debugMode) {
+
 			svg.addEventListener("mouseenter", evt => {
-				// evt.target.style.fill = hoveredColor;
-				evt.target.style.fill = "rgb(0, 127, 0)";
+				mouseEnterPath(evt.target);
 			});
 
-			svg.addEventListener("mouseleave", evt => {
-				evt.target.style.fill = countryColor;
+			svg.addEventListener("click", evt => {
+				mouseClickPath(evt.target);
 			});
+			
 		}
 	}
 
@@ -86,38 +116,39 @@ export const assignIds = () => {
 	let it = 0;
 
 	// assignIdsTo("gmt-11", idsGmtMinus11, 0);
-	assignIdsTo("gmt-10", idsGmtMinus10, ++it);
-	assignIdsTo("gmt-9",  idsGmtMinus9,  ++it);
-	assignIdsTo("gmt-8",  idsGmtMinus8,  ++it);
-	assignIdsTo("gmt-7",  idsGmtMinus7,  ++it);
-	assignIdsTo("gmt-6",  idsGmtMinus6,  ++it);
-	assignIdsTo("gmt-5",  idsGmtMinus5,  ++it);
-	assignIdsTo("gmt-4",  idsGmtMinus4,  ++it);
-	assignIdsTo("gmt-3",  idsGmtMinus3,  ++it);
-	assignIdsTo("gmt-2",  idsGmtMinus2,  ++it);
-	assignIdsTo("gmt-1",  idsGmtMinus1,  ++it);
-	assignIdsTo("gmt+0",  idsGmtZero,    ++it);
-	assignIdsTo("gmt+1",  idsGmtPlus1,   ++it);
-	assignIdsTo("gmt+2",  idsGmtPlus2,   ++it);
-	assignIdsTo("gmt+3",  idsGmtPlus3,   ++it);
-	assignIdsTo("gmt+4",  idsGmtPlus4,   ++it);
-	assignIdsTo("gmt+5",  idsGmtPlus5,   ++it);
-	assignIdsTo("gmt+6",  idsGmtPlus6,   ++it);
-	assignIdsTo("gmt+7",  idsGmtPlus7,   ++it);
-	assignIdsTo("gmt+8",  idsGmtPlus8,   ++it);
-	assignIdsTo("gmt+9",  idsGmtPlus9,   ++it);
-	assignIdsTo("gmt+10", idsGmtPlus10,  ++it);
-	assignIdsTo("gmt+11", idsGmtPlus11,  ++it);
-	assignIdsTo("gmt+12", idsGmtPlus12,  ++it);
-	assignIdsTo("gmt+14", idsGmtPlus14,  ++it);
+	assignIdsTo("gmt-10", idsGmtMinus10, ++it, -10);
+	assignIdsTo("gmt-9",  idsGmtMinus9,  ++it, -9);
+	assignIdsTo("gmt-8",  idsGmtMinus8,  ++it, -8);
+	assignIdsTo("gmt-7",  idsGmtMinus7,  ++it, -7);
+	assignIdsTo("gmt-6",  idsGmtMinus6,  ++it, -6);
+	assignIdsTo("gmt-5",  idsGmtMinus5,  ++it, -5);
+	assignIdsTo("gmt-4",  idsGmtMinus4,  ++it, -4);
+	assignIdsTo("gmt-3",  idsGmtMinus3,  ++it, -3);
+	assignIdsTo("gmt-2",  idsGmtMinus2,  ++it, -2);
+	assignIdsTo("gmt-1",  idsGmtMinus1,  ++it, -1);
+	assignIdsTo("gmt+0",  idsGmtZero,    ++it, 0);
+	assignIdsTo("gmt+1",  idsGmtPlus1,   ++it, 1);
+	assignIdsTo("gmt+2",  idsGmtPlus2,   ++it, 2);
+	assignIdsTo("gmt+3",  idsGmtPlus3,   ++it, 3);
+	assignIdsTo("gmt+4",  idsGmtPlus4,   ++it, 4);
+	assignIdsTo("gmt+5",  idsGmtPlus5,   ++it, 5);
+	assignIdsTo("gmt+6",  idsGmtPlus6,   ++it, 6);
+	assignIdsTo("gmt+7",  idsGmtPlus7,   ++it, 7);
+	assignIdsTo("gmt+8",  idsGmtPlus8,   ++it, 8);
+	assignIdsTo("gmt+9",  idsGmtPlus9,   ++it, 9);
+	assignIdsTo("gmt+10", idsGmtPlus10,  ++it, 10);
+	assignIdsTo("gmt+11", idsGmtPlus11,  ++it, 11);
+	assignIdsTo("gmt+12", idsGmtPlus12,  ++it, 12);
+	assignIdsTo("gmt+14", idsGmtPlus14,  ++it, 14);
 
-	assignIdsTo("gmt-3_1/2", idsGmtMinus3andAHalf, -1);
-	assignIdsTo("gmt+3_1/2", idsGmtPlus3AndAHalf, -1);
-	assignIdsTo("gmt+4_1/2", idsGmtPlus4AndAHalf, -2);
-	assignIdsTo("gmt+5_1/2", idsGmtPlus5AndAHalf, -1);
-	assignIdsTo("gmt+5_3/4", nePalMeuPal, -2);
-	assignIdsTo("gmt+6_1/2", idsGmtPlus6AndAHalf, -2);
-	assignIdsTo("gmt+9_1/2", idsGmtPlus9AndAHalf, -1);
+	assignIdsTo("gmt-3_1/2", idsGmtMinus3andAHalf, -1, -3 - 1/2);
+	assignIdsTo("gmt+3_1/2", idsGmtPlus3AndAHalf,  -1,  3 + 1/2);
+	assignIdsTo("gmt+4_1/2", idsGmtPlus4AndAHalf,  -2,  4 + 1/2);
+	assignIdsTo("gmt+5_1/2", idsGmtPlus5AndAHalf,  -1,  5 + 1/2);
+	assignIdsTo("gmt+6_1/2", idsGmtPlus6AndAHalf,  -2,  6 + 1/2);
+	assignIdsTo("gmt+9_1/2", idsGmtPlus9AndAHalf,  -1,  9 + 1/2);
+
+	assignIdsTo("gmt+5_3/4", nePalMeuPal, -2, 5 + 3/4);
 }
 
 const idsGmtMinus10 = [ "path387", "path746", "path569", "path751", "path565", "path920", "path530", "path388", "path924", "path410", "path747", "path743", "path566", "path384", "path547", "path1065", "path1064", "path900", "path527", "path901", "path896", "path734", "path885", "path1055", "path714", "path709", "path552", "path540", "path866", "path370", "path895", "path911", "path739", "path558", "path562", "path915", "path359", "path891", "path906", "path1059", "path699", "path1035", "path1045", "path352", "path528", "path715", "path886", "path700", "path357", "path893", "path538", "path710", "path705", "path717", "path523", "path362", "path898", "path1040", "path880", "path503", "path856", "path724", "path730", "path905", "path535", "path929", "path575", "path570", "path752", "path393", "path939", "path580", "path567", "path403", "path934", "path398", "path757", "path871", "path881", "path1050", "path890", "path1060", "path690", "path888", "path553", "path712", "path537", "path933", "path2722", "path1046", "path686", "path691", "path2575", "path500", "path853", "path677", "path1032", "path488", "path494", "path671", "path665", "path841", "path1026", "path847", "path1021" ];
@@ -152,4 +183,3 @@ const idsGmtPlus5AndAHalf   = [ "path2009", "path3291", "path2153", "path2452", 
 const nePalMeuPal = [ "path1663" ];
 const idsGmtPlus6AndAHalf   = [ "path2384", "path3302", "path732" ];
 const idsGmtPlus9AndAHalf   = [ "path1909", "path2931", "path2499", "path1657" ];
-
