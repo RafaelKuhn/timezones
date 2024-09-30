@@ -24,7 +24,7 @@ div#container {
 
 	resize: both;
  	overflow: auto;
- 	/* border: 10px dashed #aaa; */
+ 	/* border: 1px dashed #aaa; */
 
 	overflow-y: hidden;
 }
@@ -44,7 +44,7 @@ div#fixbot {
 	bottom: 0;
   left: 50%;
   width: 50vw;
-	height: 15vh;
+	height: 20vh;
 
 	transform: translate(-50%, 0px);
 
@@ -57,55 +57,64 @@ div#fixbot {
 	margin-bottom: 1vh;
 
 
+	min-width: 300px;
 	min-height: 100px;
 	/* opacity: 20%; */
 
 	pointer-events: none;
-}
 
-div#fixbot {
 	text-align: center;
 }
 
-div#fixbot h2 {
-	/* font-size: 1rem; */
+
+div#fixbot h3 {
+	/* font-size: 1.8rem; */
+	/* font-size: 180%; */
+	font-size: max(20px, 3.2vh);
 }
 
-#gm {
-    text-shadow:
-    -1px -1px 0 #000000,
-    1px -1px 0 #000000,
-    -1px 1px 0 #000000,
-    1px 1px 0 #000000,  
-    -2px 0 0 #000000,
-    2px 0 0 #000000,
-    0 2px 0 #000000,
-    0 -2px 0 #000000; /* Terminate with a semi-colon */
+div#fixbot h1 {
+	/* font-size:  3.825rem; */
+	/* font-size: 350%; */
+	font-size: max(30px, 7.8vh);
 }
+
 
 .inline {
 	display: inline;
 }
 
 
-#gmt-hour, #gmt {
-	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+ /* 00:00 text outside svg */
+h1#gmt-hour {
+
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+
+	font-size: 250%;
+	line-height: 90%;
+	/* text-align: center; */
+	text-size-adjust: auto;
+	margin: 0;
+	padding:0;
 }
 
-#gmt-hour {
-	font-size: 250%;
-}
 
 
 svg.inline-svg {
-	margin: 0 auto;
+	margin: 1vh auto;
 }
 
-/* <text> inside svg */
-#gmt {
-	height: 100px
+/* UTC+X <text> inside svg */
+text#gmt {
+	height: 100px;
 	/* margin: 0 auto; */
+
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+	/* font-family: 'Times New Roman', Times, serif; */
+	font-size: max(22px, 3.6vh);
+	font-weight: 700;
 }
+
 
 
 
@@ -126,5 +135,8 @@ svg.inline-svg {
 	position: fixed;
 	padding-top: 10px;
 	padding: 10px 10px 10px 10px;
-	background-color: aquamarine;
+	background-color: beige;
+	/* background-color: rgba(245, 245, 220, 0.7); */
+	border-bottom: 3px solid black;
+	border-right: 3px solid black;
 }
