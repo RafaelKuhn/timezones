@@ -10,8 +10,18 @@ import { svg } from "/src/svg_files/newest_svg.js"
 
 import { SVG } from "./svg.min.js"
 
-import { ZONE, svgsByZone, colorsByZone, brightColorsByZone, timeIncrementByZone } from "./countries.js";
+import { ZONE, svgsByZone, colorsByZone, brightColorsByZone, timeIncrementByZone as timeIncrementHoursByZone, prettyZoneNamesByZone } from "./countries.js";
+// from "/src/countries.js";
 
+
+const gmtWindow = document.getElementById("fixbot");
+
+/** @type {HTMLHeadingElement} */
+const gmtHour = document.getElementById("gmt-hour");
+
+/** @type {HTMLHeadingElement} */
+// const gmtTextSvg = document.getElementById("gmt-parent");
+const gmtText = document.getElementById("gmt");
 
 
 /** @type {HTMLDivElement} */
@@ -147,7 +157,8 @@ if (splitUrl.length > 1) {
 	if (firstSplitByQuestionMark.includes("fill"))  fillWholeMap = true;
 }
 
-console.log(`debug mode: ${debugMode}, test: ${test}`);
+if (debugMode) console.log(`DEBUG MODE! test: ${test}`);
+
 console.assert(!(debugMode && test), "shouldnt have both prod and debug mode")
 
 
@@ -198,6 +209,9 @@ const mouseEnterOcean = _ => {
 		resetZoneHighlight(currentHoveringZone);
 		currentHoveringZone = null;
 	}
+
+	gmtWindow.classList.remove("show");
+	gmtWindow.classList.add("hide");
 }
 
 const resetZoneHighlight = zoneName => {
@@ -211,29 +225,44 @@ const resetZoneHighlight = zoneName => {
 }
 
 const highlightZone = zoneName => {
+	const brightColor = brightColorsByZone.get(zoneName);
+
+	const date = getDateTimeOf(zoneName);
+	gmtHour.innerText = `${date.getHours()}:${twoDigs(date.getMinutes())}`
+
+	const color = colorsByZone.get(zoneName);
+	gmtText.textContent = prettyZoneNamesByZone.get(zoneName);
+	gmtText.style.fill = color;
+
+	// gmtTextSvg.setAttribute("viewBox", `0 0 400 100`);
+
+
 	const svgs = svgsByZone.get(zoneName);
 	console.assert(!!svgs)
-
 	for (const svg of svgs) {
-		const color = brightColorsByZone.get(zoneName);
-		svg.style.fill = color;
+		svg.style.fill = brightColor;
 	}
+}
+
+const MINS_TO_MILLIS = 60 * 1000;
+const getDateTimeOf = zoneName => {
+	const date = new Date();
+	const offset = date.getTimezoneOffset();
+
+	date.setTime(date.getTime() + offset * MINS_TO_MILLIS);
+
+	const minsIncrement = timeIncrementHoursByZone.get(zoneName) * 60;
+	date.setTime(date.getTime() + minsIncrement * MINS_TO_MILLIS);
+
+	return date;
 }
 
 const mouseEnterCountryPath = path => {
 	// check if path is flagged as clicked
 
 	// console.log(`entered path ${path}`);
-
 	const timezoneAttrib = path.getAttribute(ZONE);
 	console.assert(!!timezoneAttrib, "should only capture enter path on timezoned area")
-	// if (!timezoneAttrib) {
-	// 	const hadPath = currentHoveringZone !== null;
-	// 	if (hadPath) resetZoneHighlight(currentHoveringZone);
-	// 	currentHoveringZone = null;
-	// 	return;
-	// }
-
 
 	const hadZone = currentHoveringZone !== null;
 	const newZoneIsDifferentFromLastOne = currentHoveringZone !== timezoneAttrib;
@@ -250,10 +279,12 @@ const mouseEnterCountryPath = path => {
 	}
 
 	// console.log(`same zone as before to ${timezoneAttrib}`);
+	// gmtWindow.style.display = "block";
+	gmtWindow.classList.remove("hide");
+	gmtWindow.classList.add("show");
 }
 
 const twoDigs = num => {
-	// if (num < 0) num = -num;
 	num = Math.abs(num)
 	return `${Math.trunc(num / 10)}${Math.trunc(num % 10)}`
 };
@@ -270,7 +301,7 @@ const mouseClickZone = path => {
 	const timezoneAttrib = path.getAttribute(ZONE);
 	console.assert(!!timezoneAttrib, "should only capture click on timezoned area")
 	
-	const rawIncrement = timeIncrementByZone.get(timezoneAttrib);
+	const rawIncrement = timeIncrementHoursByZone.get(timezoneAttrib);
 
 	const incrementHours = Math.trunc(rawIncrement);
 	const incrementMins  = rawIncrement % 1 * 60.0;

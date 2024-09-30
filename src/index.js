@@ -22,11 +22,9 @@ document.getElementById("path60").remove();
 
 
 
-
-
 /** @type {Array.<SVGPathElement>} */
 const paths = svgJsRoot.node.querySelectorAll("path");
-console.log(`found ${paths.length} paths`);
+if (debugMode) console.log(`found ${paths.length} paths`);
 
 
 const waterColor    = "rgb(236, 236, 236)";
@@ -85,7 +83,7 @@ window.prune = pruneRegistered => {
 window.mark = markRegistered => {
 	if (markRegistered) {
 
-		// let it = 0;
+		let it = 0;
 		const cols = 4;
 		for (const [ zoneName, paths ] of svgsByZone) {
 
@@ -118,13 +116,15 @@ window.mark = markRegistered => {
 
 
 // LOG
-var it = 0;
-for (const entry of map) {
-	console.log(`${it}: %c ${entry[0]}: ${entry[1]}`, `color: ${entry[0]}`);
-
-	it += 1;
+if (debugMode) {
+	let it = 0;
+	for (const entry of map) {
+		console.log(`${it}: %c ${entry[0]}: ${entry[1]}`, `color: ${entry[0]}`);
+	
+		it += 1;
+	}
+	console.log(" ");
 }
-console.log(" ");
 
 
 
@@ -132,9 +132,9 @@ console.log(" ");
 if (false) {
 // if (true) {
 	const svg = document.querySelector("svg");
-	var aFileParts = [ svg.innerHTML ];
-	// var oMyBlob = new Blob(aFileParts, { type : 'text/html;charset=utf8' }); // the blob
-	var oMyBlob = new Blob(aFileParts, { type : 'text/plain;charset=utf8' }); // the blob
+	let aFileParts = [ svg.innerHTML ];
+	// let oMyBlob = new Blob(aFileParts, { type : 'text/html;charset=utf8' }); // the blob
+	let oMyBlob = new Blob(aFileParts, { type : 'text/plain;charset=utf8' }); // the blob
 	window.open(URL.createObjectURL(oMyBlob));
 }
 

@@ -8,12 +8,22 @@
 	<title>Timezones</title>
 </head>
 <body>
+	
+	<div class="temp"> <h3>Scroll wheel to zoom</h3> <h3>Middle mouse to pane</h3> </div>
 
 	<div id="container"></div>
 
-	<!-- <div id="fixbot">
-		<h2>Timezone hovered</h2>
-	</div> -->
+	<div id="fixbot" class="hide">
+		<h3>Hovering timezone</h3>
+		<h1 id="gmt-hour">a</h1>
+		<!-- <h3 id="gmt">GMT</h3> -->
+		<!-- <svg id="gmt-parent" class="inline-svg"> -->
+		<svg id="gmt-parent" class="inline-svg" viewBox="0 0 500 250">
+			<text id="gmt" text-anchor="middle" x="50%" y="20" font-size="20pt" fill="white" stroke="black" stroke-width="0.75">
+				GMT
+			</text>
+		</svg>
+	</div>
 
 	<script src="src/index.js" type="module"></script>
 </body>

@@ -16,11 +16,6 @@ body {
 	overflow: hidden;
 }
 
-canvas#canvao {
-	background-color: beige;
-	/* width: 100%; */
-	/* height: 100%; */
-}
 
 div#container {
 
@@ -34,7 +29,9 @@ div#container {
 	overflow-y: hidden;
 }
 
-svg {
+
+/* parent css of the whole map */
+svg:has(#svg1) {
 	width: 100%;
 	height: 100%;
 
@@ -53,8 +50,9 @@ div#fixbot {
 
   border: 3px solid black;
 
-	background-color: beige;
-	opacity: 70%;
+	/* background-color: beige; */
+	background-color: rgba(245, 245, 220, 0.7);
+	/* opacity: 70%; */
 
 	margin-bottom: 1vh;
 
@@ -65,14 +63,68 @@ div#fixbot {
 	pointer-events: none;
 }
 
+div#fixbot {
+	text-align: center;
+}
+
 div#fixbot h2 {
-	font-size: 1rem;
+	/* font-size: 1rem; */
+}
+
+#gm {
+    text-shadow:
+    -1px -1px 0 #000000,
+    1px -1px 0 #000000,
+    -1px 1px 0 #000000,
+    1px 1px 0 #000000,  
+    -2px 0 0 #000000,
+    2px 0 0 #000000,
+    0 2px 0 #000000,
+    0 -2px 0 #000000; /* Terminate with a semi-colon */
+}
+
+.inline {
+	display: inline;
+}
+
+
+#gmt-hour, #gmt {
+	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+#gmt-hour {
+	font-size: 250%;
+}
+
+
+svg.inline-svg {
+	margin: 0 auto;
+}
+
+/* <text> inside svg */
+#gmt {
+	height: 100px
+	/* margin: 0 auto; */
 }
 
 
 
 
 
+.hide { display: none; }
+.show { display: block; }
+
+
+
+
 .no-svg-events {
 	pointer-events: none;
+}
+
+
+.temp {
+	position: fixed;
+	padding-top: 10px;
+	padding: 10px 10px 10px 10px;
+	background-color: aquamarine;
 }

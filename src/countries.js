@@ -5,7 +5,6 @@ import { debugMode, mouseEnterCountryPath, hoveredColor, clickedColor, countryCo
 
 export const ZONE = "zone";
 
-// const country = "country";
 
 /** @type {Map.<String, Array.<SVGPathElement>>} */
 export const svgsByZone = new Map();
@@ -17,6 +16,8 @@ export const colorsByZone = new Map();
 export const brightColorsByZone = new Map();
 
 export const timeIncrementByZone = new Map();
+
+export const prettyZoneNamesByZone = new Map();
 
 
 // const BLUE   = "rgb(0, 90, 200)";
@@ -30,11 +31,12 @@ export const timeIncrementByZone = new Map();
 
 // cool map color schemes
 // https://carto.com/carto-colors/
+// https://colorbrewer2.org
+
 
 // BRAZIL RIGHT
 const COL1  = "rgb(245, 217, 0)";
 // SOUTH AFRICA
-// const COL2  = "rgb(250, 160, 83)";
 const COL2  = "rgb(252, 138, 0)";
 // COLOMBIA
 const COL3  = "rgb(0, 113, 255)";
@@ -128,9 +130,44 @@ const assignIdsTo = (gmtName, gmtIdsArray, colIndex, increment) => {
 
 }
 
+const asignNames = () => {
+	prettyZoneNamesByZone.set("gmt-10",    "UTC-10")
+	prettyZoneNamesByZone.set("gmt-9",     "UTC-9")
+	prettyZoneNamesByZone.set("gmt-8",     "UTC-8")
+	prettyZoneNamesByZone.set("gmt-7",     "UTC-7")
+	prettyZoneNamesByZone.set("gmt-6",     "UTC-6")
+	prettyZoneNamesByZone.set("gmt-5",     "UTC-5")
+	prettyZoneNamesByZone.set("gmt-4",     "UTC-4")
+	prettyZoneNamesByZone.set("gmt-3",     "UTC-3")
+	prettyZoneNamesByZone.set("gmt-2",     "UTC-2")
+	prettyZoneNamesByZone.set("gmt-1",     "UTC-1")
+	prettyZoneNamesByZone.set("gmt+0",     "UTC")
+	prettyZoneNamesByZone.set("gmt+1",     "UTC+1")
+	prettyZoneNamesByZone.set("gmt+2",     "UTC+2")
+	prettyZoneNamesByZone.set("gmt+3",     "UTC+3")
+	prettyZoneNamesByZone.set("gmt+4",     "UTC+4")
+	prettyZoneNamesByZone.set("gmt+5",     "UTC+5")
+	prettyZoneNamesByZone.set("gmt+6",     "UTC+6")
+	prettyZoneNamesByZone.set("gmt+7",     "UTC+7")
+	prettyZoneNamesByZone.set("gmt+8",     "UTC+8")
+	prettyZoneNamesByZone.set("gmt+9",     "UTC+9")
+	prettyZoneNamesByZone.set("gmt+10",    "UTC+10")
+	prettyZoneNamesByZone.set("gmt+11",    "UTC+11")
+	prettyZoneNamesByZone.set("gmt+12",    "UTC+12")
+	prettyZoneNamesByZone.set("gmt+14",    "UTC+14")
+	prettyZoneNamesByZone.set("gmt-3_1/2", "UTC-3½")
+	prettyZoneNamesByZone.set("gmt+3_1/2", "UTC+3½")
+	prettyZoneNamesByZone.set("gmt+4_1/2", "UTC+4½")
+	prettyZoneNamesByZone.set("gmt+5_1/2", "UTC+5½")
+	prettyZoneNamesByZone.set("gmt+6_1/2", "UTC+6½")
+	prettyZoneNamesByZone.set("gmt+9_1/2", "UTC+9½")
+	prettyZoneNamesByZone.set("gmt+5_3/4", "UTC+5¾")
+}
+
 
 export const assignIds = () => {
-	// TODO: assign a number here to be the seed of the color
+
+	asignNames();
 
 	let it = 0;
 
