@@ -325,7 +325,6 @@ const applyPanning = () => {
 }
 
 const onLostFocus = _ => {
-	console.log(`lost focus`);
 	isPanning = false;
 }
 
@@ -335,7 +334,6 @@ window.addEventListener("blur", onLostFocus);
 document.addEventListener("mousedown", evt => {
 	if (evt.button == MIDDLE_BTN) {
 
-		console.log(`panning MIDDLE_BTN`);
 		isPanning = true;
 		paneMouseStart.x = evt.clientX;
 		paneMouseStart.y = evt.clientY;
@@ -494,10 +492,7 @@ document.addEventListener("mouseup", evt => {
 	}
 
 	if (evt.button == MIDDLE_BTN) {
-
-		console.log(`up MIDDLE_BTN`);
 		isPanning = false;
-
 		return;
 	}
 
@@ -515,5 +510,5 @@ export {
 
 	svgJsRoot,
 
-	mouseEnterCountryPath as mouseEnterPath, mouseEnterOcean, mouseClickZone as mouseClickPath,
+	mouseEnterCountryPath, mouseEnterOcean, mouseClickZone as mouseClickPath,
 };

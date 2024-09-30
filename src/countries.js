@@ -1,5 +1,5 @@
 
-import { debugMode, mouseEnterPath, hoveredColor, clickedColor, countryColor, mouseClickPath } from "./svg.js";
+import { debugMode, mouseEnterCountryPath, hoveredColor, clickedColor, countryColor, mouseClickPath } from "./svg.js";
 // from "/src/svg.js";
 
 
@@ -19,43 +19,62 @@ export const brightColorsByZone = new Map();
 export const timeIncrementByZone = new Map();
 
 
-const BLUE   = "rgb(0, 90, 200)";
-const CYAN   = "rgb(20, 210, 220)";
-const ORANGE = "rgb(250, 120, 80)";
-const YELLOW = "rgb(217, 217, 45)";
-const PINK   = "rgb(232, 64, 64)";
+// const BLUE   = "rgb(0, 90, 200)";
+// const CYAN   = "rgb(20, 210, 220)";
+// const ORANGE = "rgb(250, 120, 80)";
+// const YELLOW = "rgb(217, 217, 45)";
+// const PINK   = "rgb(232, 64, 64)";
 
+// very good oklch color picker
+// https://oklch.com
 
-const B_BLUE   = "rgb(60, 150, 255)";
-const B_CYAN   = "rgb(80, 255, 255)";
-const B_ORANGE = "rgb(255, 180, 120)";
-const B_YELLOW = "rgb(245, 245, 24)";
-const B_PINK   = "rgb(255, 150, 150)";
+// cool map color schemes
+// https://carto.com/carto-colors/
+
+// BRAZIL RIGHT
+const COL1  = "rgb(245, 217, 0)";
+// SOUTH AFRICA
+// const COL2  = "rgb(250, 160, 83)";
+const COL2  = "rgb(252, 138, 0)";
+// COLOMBIA
+const COL3  = "rgb(0, 113, 255)";
+// BRAZIL LEFT
+const COL4  = "rgb(7, 149, 71)";
+// SPECIAL COUNTRIES 1
+const SCOL1 = "rgb(247, 79, 76)";
+// SPECIAL COUNTRIES 2
+const SCOL2 = "rgb(231, 80, 167)";
+
+const H_COL1  = "rgb(245, 245, 24)";
+const H_COL2  = "rgb(255, 176, 100)";
+const H_COL3  = "rgb(60, 150, 255)";
+const H_COL4  = "rgb(0, 210, 91)";
+const H_SCOL1 = "rgb(255, 123, 115)";
+const H_SCOL2 = "rgb(255, 132, 204)";
+
 
 const colorByColorIndex = index => {
-	// if (index === -1) return BRIGHT_PINK;
-	if (index === -1) return PINK;
-	if (index === -2) return PINK;
+	if (index === -1) return SCOL1;
+	if (index === -2) return SCOL2;
 
 	const mod = index % 4;
-	if (mod === 0) return BLUE;
-	if (mod === 1) return CYAN;
-	if (mod === 2) return ORANGE;
-	if (mod === 3) return YELLOW;
+	if (mod === 0) return COL1;
+	if (mod === 1) return COL2;
+	if (mod === 2) return COL3;
+	if (mod === 3) return COL4;
 
 	console.error(`unregistered color for index ${index}`)
 }
 
 const selectedColorByColorIndex = index => {
-	if (index === -1) return B_PINK;
-	if (index === -2) return B_PINK;
-	// if (index === -2) return PINK;
+	if (index === -1) return H_SCOL1;
+	if (index === -2) return H_SCOL2;
 
 	const mod = index % 4;
-	if (mod === 0) return B_BLUE;
-	if (mod === 1) return B_CYAN;
-	if (mod === 2) return B_ORANGE;
-	if (mod === 3) return B_YELLOW;
+	if (mod === 0) return H_COL1;
+	if (mod === 1) return H_COL2;
+	if (mod === 2) return H_COL3;
+	if (mod === 3) return H_COL4;
 
 	console.error(`unregistered color for index ${index}`)
 }
@@ -97,7 +116,7 @@ const assignIdsTo = (gmtName, gmtIdsArray, colIndex, increment) => {
 		if (!debugMode) {
 
 			svg.addEventListener("mouseenter", evt => {
-				mouseEnterPath(evt.target);
+				mouseEnterCountryPath(evt.target);
 			});
 
 			svg.addEventListener("click", evt => {

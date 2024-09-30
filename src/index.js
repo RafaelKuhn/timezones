@@ -66,7 +66,7 @@ document.getElementById("path15775").style.fill = "black";
 
 
 
-
+// DEBUG
 window.prune = pruneRegistered => {
 	for (const path of paths) {
 		const isCountry = path.style.fill === countryColor;
@@ -128,7 +128,7 @@ console.log(" ");
 
 
 
-
+// EXPORT
 if (false) {
 // if (true) {
 	const svg = document.querySelector("svg");
@@ -137,6 +137,7 @@ if (false) {
 	var oMyBlob = new Blob(aFileParts, { type : 'text/plain;charset=utf8' }); // the blob
 	window.open(URL.createObjectURL(oMyBlob));
 }
+
 
 
 
