@@ -4,8 +4,6 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<!-- <link href='https://fonts.googleapis.com/css?family=Orbitron' rel='stylesheet' type='text/css'> -->
-
 	<link rel="stylesheet" href="index.css">
 	<link rel="icon" href="favicon.png">
 
@@ -13,18 +11,35 @@
 </head>
 <body>
 	
-	<div class="temp"> <h3>Scroll wheel to zoom</h3> <h3>Middle mouse to pane</h3> </div>
+	<div class="help-panel"> <h3>Scroll wheel to zoom</h3> <h3>Middle mouse to pane</h3> </div>
 
 	<div id="container"></div>
 
 	<div id="fixbot" class="hide">
-		<h3>Hovering timezone</h3>
-		<h1 id="gmt-hour">a</h1>
-		<svg id="gmt-parent" class="inline-svg" viewBox="0 0 500 250">
-			<text id="gmt" text-anchor="middle" x="50%" y="25" font-size="15pt" fill="white" stroke="black" stroke-width="1.0">
-				GMT
-			</text>
-		</svg>
+
+		<!-- <div class="flex-vert">
+			<div><h3>Hovering timezone</h3></div>
+			<div><h3 id="gmt-hour">10:30</h3></div>
+
+			<div class="svgflex">
+				<svg id="timezone-svg" preserveAspectRatio="none" ></svg>
+			</div>
+		</div> -->
+
+		<div id="hover-div">
+			<h3>Hovering timezone</h3>
+			<h1 id="gmt-hour">a</h1>
+			<svg id="gmt-parent" class="inline-svg" viewBox="0 0 500 250">
+				<text id="gmt" text-anchor="middle" x="50%" y="25" font-size="15pt" fill="white" stroke="black" stroke-width="1.0">
+					GMT
+				</text>
+			</svg>
+		</div>
+
+		<div id="select-div">
+
+		</div>
+
 	</div>
 
 	<script src="src/index.js" type="module"></script>

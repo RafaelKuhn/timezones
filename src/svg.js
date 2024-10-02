@@ -8,7 +8,7 @@
 // Has no countours
 import { svg } from "/src/svg_files/newest_svg.js"
 
-import { SVG } from "./svg.min.js"
+// import { SVG } from "./svg.min.js" // LIB
 
 import { ZONE, svgsByZone, colorsByZone, brightColorsByZone, timeIncrementByZone as timeIncrementHoursByZone, prettyZoneNamesByZone } from "./countries.js";
 // from "/src/countries.js";
@@ -27,12 +27,15 @@ const gmtText = document.getElementById("gmt");
 /** @type {HTMLDivElement} */
 const container = document.getElementById("container");
 
-const svgJsRoot = SVG().addTo(container).svg(svg);
+// const svgJsRoot = SVG().addTo(container).svg(svg); // LIB
+const svgJsRoot = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svgJsRoot.innerHTML = svg;
+container.appendChild(svgJsRoot);
+
 
 /** @type {HTMLElement & SVGSVGElement} */
-// /** @type {HTMLElement & SVGElement} */
-const mainSvg = svgJsRoot.node;
-
+// const mainSvg = svgJsRoot.node; // LIB
+const mainSvg = svgJsRoot;
 
 
 const fix = (v, n) => v.toFixed(n);
@@ -45,7 +48,9 @@ const attrFromVbox = vbox => `${fix(vbox.x, 2)} ${fix(vbox.y, 2)} ${fix(vbox.wid
 const debugStrVbox = vbox => `[${fix(vbox.x, 0)}, ${fix(vbox.y, 0)}, ${fix(vbox.wid, 0)}, ${fix(vbox.hei, 0)}] sc ${vbox.scale}`
 
 
-const firstInnerNode = svgJsRoot.node.firstChild;
+// const firstInnerNode = svgJsRoot.node.firstChild; // LIB
+const firstInnerNode = svgJsRoot.querySelector("svg");
+
 const resizeFirstInnerNodeFromContainer = () => {
 	firstInnerNode.setAttribute("width",  container.offsetWidth);
 	firstInnerNode.setAttribute("height", container.offsetHeight);
