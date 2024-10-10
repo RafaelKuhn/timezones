@@ -1,20 +1,14 @@
 
 import { ZONE } from "./countries.js";
-import { svgJsRoot,countryColor, initSvgEvents, resizeSvg,     fillWholeMap, prod, mouseEnterOcean, debugMode }
+import { svgJsRoot,countryColor, initSvgEvents, resizeSvg,     fillWholeMap, prod, mouseEnterOcean, debugMode, enterSelectModeWithZone, colorTimezones, mouseClickZone, mouseClickOcean }
 from "./svg.js";
 //  from "/src/svg.js";
 
 import { assignIds, svgsByZone, registeredSvgsSet, colorsByZone } from "/src/countries.js";
 
 
-const resize = () => {
-	resizeSvg();
-}
+resizeSvg();
 
-resize();
-assignIds();
-
-initSvgEvents();
 
 
 // DELETE WEIRD AREA AROUND INDIAN ISLANDS
@@ -23,41 +17,47 @@ document.getElementById("path60").remove();
 
 
 /** @type {Array.<SVGPathElement>} */
-const paths = svgJsRoot.node.querySelectorAll("path");
+const paths = svgJsRoot.querySelectorAll("path");
 if (debugMode) console.log(`found ${paths.length} paths`);
 
 
-const waterColor    = "rgb(236, 236, 236)";
-const newWaterColor = "rgb(198, 236, 255)";
+const WATER_COLOR     = "rgb(236, 236, 236)";
+const NEW_WATER_COLOR = "rgb(198, 236, 255)";
 
-const map = new Map();
-for (const path of paths) {
+const pathAmountByMapColor = new Map();
 
-	const num = map.get(path.style.fill);
-	if (!num) {
-		map.set(path.style.fill, 1)
-	} else {
-		map.set(path.style.fill, num + 1)
+const fixPathsAndPruneUnregisteredOnes = () => {
+	for (const path of paths) {
+
+		const num = pathAmountByMapColor.get(path.style.fill);
+		if (!num) {
+			pathAmountByMapColor.set(path.style.fill, 1)
+		} else {
+			pathAmountByMapColor.set(path.style.fill, num + 1)
+		}
+	
+		// FIX WATER COLOR TO A BLUEYSH
+		if (path.style.fill === countryColor) {
+	
+			// REMOVE NON MARKED COUNTRIES
+			const isCountry = !!path.getAttribute(ZONE);
+			if (!isCountry) path.remove();
+			
+		} else if (path.style.fill === WATER_COLOR) {
+			// path.classList.add("water")
+	
+			path.addEventListener("mouseenter", _ => mouseEnterOcean());
+			path.addEventListener("click", _ => mouseClickOcean());
+
+			path.style.fill = NEW_WATER_COLOR;
+		} else {
+			path.classList.add("no-svg-events");
+		}
+
 	}
-
-	// FIX WATER COLOR TO A BLUEYSH
-	if (path.style.fill === countryColor) {
-
-		// REMOVE NON MARKED COUNTRIES
-		const isCountry = !!path.getAttribute(ZONE);
-		if (!isCountry) path.remove();
-		
-	} else if (path.style.fill === waterColor) {
-		// path.classList.add("water")
-
-		path.addEventListener("mouseenter", evt => mouseEnterOcean(evt.target));
-		path.style.fill = newWaterColor;
-	} else {
-		path.classList.add("no-svg-events");
-	}
-
 }
 
+// PAINT HEADER
 document.getElementById("path15774").style.fill = "beige";
 document.getElementById("path15775").style.fill = "black";
 
@@ -82,20 +82,7 @@ window.prune = pruneRegistered => {
 
 window.mark = markRegistered => {
 	if (markRegistered) {
-
-		let it = 0;
-		const cols = 4;
-		for (const [ zoneName, paths ] of svgsByZone) {
-
-			const col = colorsByZone.get(zoneName);
-			// console.log(`%c${zoneName}`, `color: ${col}`);
-			for (const path of paths) {
-				path.style.fill = col;				
-			}
-			
-			it += 1;
-		}
-
+		colorTimezones();
 	} else {
 	
 		for (const path of paths) {
@@ -113,12 +100,10 @@ window.mark = markRegistered => {
 
 
 
-
-
 // LOG
 if (debugMode) {
 	let it = 0;
-	for (const entry of map) {
+	for (const entry of pathAmountByMapColor) {
 		console.log(`${it}: %c ${entry[0]}: ${entry[1]}`, `color: ${entry[0]}`);
 	
 		it += 1;
@@ -138,13 +123,13 @@ if (false) {
 	window.open(URL.createObjectURL(oMyBlob));
 }
 
+window.addEventListener("resize", _ => resizeSvg());
 
 
+assignIds();
+fixPathsAndPruneUnregisteredOnes();
+initSvgEvents();
 
-window.addEventListener("resize", _ => {
-	resize();
-});
+if (!debugMode) colorTimezones();
 
-
-if (!debugMode)
-	window.mark(true);
+// enterSelectModeWithZone("gmt-4");

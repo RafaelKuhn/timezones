@@ -11,7 +11,10 @@
 </head>
 <body>
 	
-	<div class="help-panel"> <h3>Scroll wheel to zoom</h3> <h3>Middle mouse to pane</h3> </div>
+	<div class="help-panel">
+		<h3>Click a timezone to pin it</h3>
+		<h3>Scroll wheel to zoom / pan</h3>
+	</div>
 
 	<div id="container"></div>
 
@@ -27,16 +30,41 @@
 		</div> -->
 
 		<div id="hover-div">
-			<h3>Hovering timezone</h3>
-			<h1 id="gmt-hour">a</h1>
-			<svg id="gmt-parent" class="inline-svg" viewBox="0 0 500 250">
-				<text id="gmt" text-anchor="middle" x="50%" y="25" font-size="15pt" fill="white" stroke="black" stroke-width="1.0">
+			<h3>hovering timezone</h3>
+			<h1 id="gmt-hour" class="gmt-hour">00:00</h1>
+			<svg class="inline-svg" viewBox="0 -5 550 275">
+				<text id="gmt" class="gmt" text-anchor="middle" x="50%" y="25" font-size="15pt" fill="white" stroke="black" stroke-width="0.25%">
 					GMT
 				</text>
 			</svg>
 		</div>
 
 		<div id="select-div">
+			<div class="cols">
+
+				<div class="row fir">
+					<h3 id="sel-header-1">pinned</h3>
+					<h1 id="sel-gmt-hour-1" class="gmt-hour">00:00</h1>
+					<svg class="inline-svg-NOT" viewBox="0 0 300 150">
+						<text id="sel-gmt-1" class="gmt" text-anchor="middle" x="50%" y="25" font-size="15pt" fill="white" stroke="black" stroke-width="0.4%">
+							GMT
+						</text>
+					</svg>
+				</div>
+
+				<div class="row sec">
+					<h3 id="sel-header-2">hovering</h3>
+					<h1 id="sel-gmt-hour-2" class="gmt-hour">00:00</h1>
+					<svg class="inline-svg-NOT" viewBox="0 0 300 150">
+						<text id="sel-gmt-2" class="gmt" text-anchor="middle" x="50%" y="25" font-size="15pt" fill="white" stroke="black" stroke-width="0.4%">
+							GMT
+						</text>
+					</svg>
+				</div>
+
+			</div>
+
+			<input type="button" class="close" value="X" id="closeSelectModeBtn"></button>
 
 		</div>
 

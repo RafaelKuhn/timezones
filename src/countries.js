@@ -1,5 +1,5 @@
 
-import { debugMode, mouseEnterCountryPath, hoveredColor, clickedColor, countryColor, mouseClickPath } from "./svg.js";
+import { debugMode, mouseEnterCountryPath, hoveredColor, clickedColor, countryColor, mouseClickZone } from "./svg.js";
 // from "/src/svg.js";
 
 
@@ -15,16 +15,16 @@ export const registeredSvgsSet = new Set();
 export const colorsByZone = new Map();
 export const brightColorsByZone = new Map();
 
+// TODO: deprecate
+export const unlitColorsByZone = new Map();
+
+// TODO: use sortedZonesData
 export const timeIncrementByZone = new Map();
 
 export const prettyZoneNamesByZone = new Map();
 
-
-// const BLUE   = "rgb(0, 90, 200)";
-// const CYAN   = "rgb(20, 210, 220)";
-// const ORANGE = "rgb(250, 120, 80)";
-// const YELLOW = "rgb(217, 217, 45)";
-// const PINK   = "rgb(232, 64, 64)";
+/** @type {Array.<{ name: String, inc: Number, index: Number }>} */
+export const sortedZonesData = [];
 
 // very good oklch color picker
 // https://oklch.com
@@ -47,12 +47,19 @@ const SCOL1 = "rgb(247, 79, 76)";
 // SPECIAL COUNTRIES 2
 const SCOL2 = "rgb(231, 80, 167)";
 
-const H_COL1  = "rgb(245, 245, 24)";
-const H_COL2  = "rgb(255, 176, 100)";
-const H_COL3  = "rgb(60, 150, 255)";
-const H_COL4  = "rgb(0, 210, 91)";
-const H_SCOL1 = "rgb(255, 123, 115)";
-const H_SCOL2 = "rgb(255, 132, 204)";
+const BRIGHT_COL1  = "rgb(245, 245, 24)";
+const BRIGHT_COL2  = "rgb(255, 176, 100)";
+const BRIGHT_COL3  = "rgb(60, 150, 255)";
+const BRIGHT_COL4  = "rgb(0, 210, 91)";
+const BRIGHT_SCOL1 = "rgb(255, 123, 115)";
+const BRIGHT_SCOL2 = "rgb(255, 132, 204)";
+
+const UNLIT_COL1  = "oklch(86.68% 0 0)";
+const UNLIT_COL2  = "oklch(76.68% 0 0)";
+const UNLIT_COL3  = "oklch(66.68% 0 0)";
+const UNLIT_COL4  = "oklch(56.68% 0 0)";
+// const UNLIT_SCOL1 = "rgb(255, 123, 115)";
+// const UNLIT_SCOL2 = "rgb(255, 132, 204)";
 
 
 const colorByColorIndex = index => {
@@ -69,16 +76,31 @@ const colorByColorIndex = index => {
 }
 
 const selectedColorByColorIndex = index => {
-	if (index === -1) return H_SCOL1;
-	if (index === -2) return H_SCOL2;
+	if (index === -1) return BRIGHT_SCOL1;
+	if (index === -2) return BRIGHT_SCOL2;
 
 	const mod = index % 4;
-	if (mod === 0) return H_COL1;
-	if (mod === 1) return H_COL2;
-	if (mod === 2) return H_COL3;
-	if (mod === 3) return H_COL4;
+	if (mod === 0) return BRIGHT_COL1;
+	if (mod === 1) return BRIGHT_COL2;
+	if (mod === 2) return BRIGHT_COL3;
+	if (mod === 3) return BRIGHT_COL4;
 
 	console.error(`unregistered color for index ${index}`)
+}
+
+const unlitColorByColorIndex = index => {
+	// if (index === -1) return BRIGHT_SCOL1;
+	// if (index === -2) return BRIGHT_SCOL2;
+	if (index === -1) return UNLIT_COL3;
+	if (index === -2) return UNLIT_COL4;
+
+	const mod = index % 4;
+	if (mod === 0) return UNLIT_COL1;
+	if (mod === 1) return UNLIT_COL2;
+	// if (mod === 2) return UNLIT_COL1;
+	// if (mod === 3) return UNLIT_COL2;
+	if (mod === 2) return UNLIT_COL3;
+	if (mod === 3) return UNLIT_COL4;
 }
 
 /**
@@ -86,13 +108,15 @@ const selectedColorByColorIndex = index => {
  * @param {String} gmtName
  * @param {Array.<String>} gmtIdsArray
  */
-const assignIdsTo = (gmtName, gmtIdsArray, colIndex, increment) => {
-	console.assert(typeof  increment != "undefined", "FORGOT INC");
+const assignIdsTo = (gmtName, gmtIdsArray, colIndex, incrementHours) => {
+	console.assert(typeof incrementHours !== "undefined", "FORGOT INC");
 
 	colorsByZone.set(gmtName, colorByColorIndex(colIndex));
 	brightColorsByZone.set(gmtName, selectedColorByColorIndex(colIndex));
+	unlitColorsByZone.set(gmtName, unlitColorByColorIndex(colIndex));
 
-	timeIncrementByZone.set(gmtName, increment);
+	timeIncrementByZone.set(gmtName, incrementHours);
+	sortedZonesData.push({ name: gmtName, inc: incrementHours, index: -1 });
 
 	const alreadyThere = svgsByZone.get(gmtName);
 
@@ -108,6 +132,11 @@ const assignIdsTo = (gmtName, gmtIdsArray, colIndex, increment) => {
 
 	for (const id of gmtIdsArray) {
 		const svg = document.getElementById(id);
+		if (!svg) {
+			console.error(`svg ${id} is null`);
+			continue;
+		}
+		
 	
 		svg.setAttribute(ZONE, gmtName);
 		svgs.push(svg);
@@ -122,7 +151,7 @@ const assignIdsTo = (gmtName, gmtIdsArray, colIndex, increment) => {
 			});
 
 			svg.addEventListener("click", evt => {
-				mouseClickPath(evt.target);
+				mouseClickZone(evt.target);
 			});
 			
 		}
@@ -131,37 +160,37 @@ const assignIdsTo = (gmtName, gmtIdsArray, colIndex, increment) => {
 }
 
 const asignNames = () => {
-	prettyZoneNamesByZone.set("gmt-10",    "UTC-10")
-	prettyZoneNamesByZone.set("gmt-9",     "UTC-9")
-	prettyZoneNamesByZone.set("gmt-8",     "UTC-8")
-	prettyZoneNamesByZone.set("gmt-7",     "UTC-7")
-	prettyZoneNamesByZone.set("gmt-6",     "UTC-6")
-	prettyZoneNamesByZone.set("gmt-5",     "UTC-5")
-	prettyZoneNamesByZone.set("gmt-4",     "UTC-4")
-	prettyZoneNamesByZone.set("gmt-3",     "UTC-3")
-	prettyZoneNamesByZone.set("gmt-2",     "UTC-2")
-	prettyZoneNamesByZone.set("gmt-1",     "UTC-1")
-	prettyZoneNamesByZone.set("gmt+0",     "UTC")
-	prettyZoneNamesByZone.set("gmt+1",     "UTC+1")
-	prettyZoneNamesByZone.set("gmt+2",     "UTC+2")
-	prettyZoneNamesByZone.set("gmt+3",     "UTC+3")
-	prettyZoneNamesByZone.set("gmt+4",     "UTC+4")
-	prettyZoneNamesByZone.set("gmt+5",     "UTC+5")
-	prettyZoneNamesByZone.set("gmt+6",     "UTC+6")
-	prettyZoneNamesByZone.set("gmt+7",     "UTC+7")
-	prettyZoneNamesByZone.set("gmt+8",     "UTC+8")
-	prettyZoneNamesByZone.set("gmt+9",     "UTC+9")
-	prettyZoneNamesByZone.set("gmt+10",    "UTC+10")
-	prettyZoneNamesByZone.set("gmt+11",    "UTC+11")
-	prettyZoneNamesByZone.set("gmt+12",    "UTC+12")
-	prettyZoneNamesByZone.set("gmt+14",    "UTC+14")
-	prettyZoneNamesByZone.set("gmt-3_1/2", "UTC-3½")
-	prettyZoneNamesByZone.set("gmt+3_1/2", "UTC+3½")
-	prettyZoneNamesByZone.set("gmt+4_1/2", "UTC+4½")
-	prettyZoneNamesByZone.set("gmt+5_1/2", "UTC+5½")
-	prettyZoneNamesByZone.set("gmt+6_1/2", "UTC+6½")
-	prettyZoneNamesByZone.set("gmt+9_1/2", "UTC+9½")
-	prettyZoneNamesByZone.set("gmt+5_3/4", "UTC+5¾")
+	prettyZoneNamesByZone.set("gmt-10",    "UTC-10");
+	prettyZoneNamesByZone.set("gmt-9",     "UTC-9");
+	prettyZoneNamesByZone.set("gmt-8",     "UTC-8");
+	prettyZoneNamesByZone.set("gmt-7",     "UTC-7");
+	prettyZoneNamesByZone.set("gmt-6",     "UTC-6");
+	prettyZoneNamesByZone.set("gmt-5",     "UTC-5");
+	prettyZoneNamesByZone.set("gmt-4",     "UTC-4");
+	prettyZoneNamesByZone.set("gmt-3",     "UTC-3");
+	prettyZoneNamesByZone.set("gmt-2",     "UTC-2");
+	prettyZoneNamesByZone.set("gmt-1",     "UTC-1");
+	prettyZoneNamesByZone.set("gmt+0",     "UTC");
+	prettyZoneNamesByZone.set("gmt+1",     "UTC+1");
+	prettyZoneNamesByZone.set("gmt+2",     "UTC+2");
+	prettyZoneNamesByZone.set("gmt+3",     "UTC+3");
+	prettyZoneNamesByZone.set("gmt+4",     "UTC+4");
+	prettyZoneNamesByZone.set("gmt+5",     "UTC+5");
+	prettyZoneNamesByZone.set("gmt+6",     "UTC+6");
+	prettyZoneNamesByZone.set("gmt+7",     "UTC+7");
+	prettyZoneNamesByZone.set("gmt+8",     "UTC+8");
+	prettyZoneNamesByZone.set("gmt+9",     "UTC+9");
+	prettyZoneNamesByZone.set("gmt+10",    "UTC+10");
+	prettyZoneNamesByZone.set("gmt+11",    "UTC+11");
+	prettyZoneNamesByZone.set("gmt+12",    "UTC+12");
+	prettyZoneNamesByZone.set("gmt+14",    "UTC+14");
+	prettyZoneNamesByZone.set("gmt-3_1/2", "UTC-3½");
+	prettyZoneNamesByZone.set("gmt+3_1/2", "UTC+3½");
+	prettyZoneNamesByZone.set("gmt+4_1/2", "UTC+4½");
+	prettyZoneNamesByZone.set("gmt+5_1/2", "UTC+5½");
+	prettyZoneNamesByZone.set("gmt+6_1/2", "UTC+6½");
+	prettyZoneNamesByZone.set("gmt+9_1/2", "UTC+9½");
+	prettyZoneNamesByZone.set("gmt+5_3/4", "UTC+5¾");
 }
 
 
@@ -205,6 +234,12 @@ export const assignIds = () => {
 	assignIdsTo("gmt+9_1/2", idsGmtPlus9AndAHalf,  -1,  9 + 1/2);
 
 	assignIdsTo("gmt+5_3/4", nePalMeuPal, -2, 5 + 3/4);
+
+	sortedZonesData.sort((a, b) => a.inc - b.inc);
+	for (let i = 0; i < sortedZonesData.length; ++i) {
+		sortedZonesData[i].index = i;
+	}
+
 }
 
 const idsGmtMinus10 = [ "path387", "path746", "path569", "path751", "path565", "path920", "path530", "path388", "path924", "path410", "path747", "path743", "path566", "path384", "path547", "path1065", "path1064", "path900", "path527", "path901", "path896", "path734", "path885", "path1055", "path714", "path709", "path552", "path540", "path866", "path370", "path895", "path911", "path739", "path558", "path562", "path915", "path359", "path891", "path906", "path1059", "path699", "path1035", "path1045", "path352", "path528", "path715", "path886", "path700", "path357", "path893", "path538", "path710", "path705", "path717", "path523", "path362", "path898", "path1040", "path880", "path503", "path856", "path724", "path730", "path905", "path535", "path929", "path575", "path570", "path752", "path393", "path939", "path580", "path567", "path403", "path934", "path398", "path757", "path871", "path881", "path1050", "path890", "path1060", "path690", "path888", "path553", "path712", "path537", "path933", "path2722", "path1046", "path686", "path691", "path2575", "path500", "path853", "path677", "path1032", "path488", "path494", "path671", "path665", "path841", "path1026", "path847", "path1021" ];

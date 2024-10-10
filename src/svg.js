@@ -10,18 +10,59 @@ import { svg } from "/src/svg_files/newest_svg.js"
 
 // import { SVG } from "./svg.min.js" // LIB
 
-import { ZONE, svgsByZone, colorsByZone, brightColorsByZone, timeIncrementByZone as timeIncrementHoursByZone, prettyZoneNamesByZone } from "./countries.js";
+import { ZONE, svgsByZone, colorsByZone, brightColorsByZone, timeIncrementByZone as timeIncrementHoursByZone, prettyZoneNamesByZone, unlitColorsByZone, sortedZonesData } from "./countries.js";
 // from "/src/countries.js";
 
 
-const gmtWindow = document.getElementById("fixbot");
+// const IS_12_HOUR_FORMAT = false;
+const IS_12_HOUR_FORMAT = true;
+
+
+const bottomWindow = document.getElementById("fixbot");
 
 /** @type {HTMLHeadingElement} */
-const gmtHour = document.getElementById("gmt-hour");
-
-/** @type {HTMLHeadingElement} */
-// const gmtTextSvg = document.getElementById("gmt-parent");
+const gmtHourText = document.getElementById("gmt-hour");
+/** @type {SVGTextElement} */
 const gmtText = document.getElementById("gmt");
+
+const hoverUi = document.getElementById("hover-div");
+const selectUi = document.getElementById("select-div");
+
+const closeSelectModeButton = document.getElementById("closeSelectModeBtn");
+
+
+/** @type {HTMLHeadingElement} */
+const selectedGmtHeader0 = document.getElementById("sel-header-1");
+const selectedGmtHeader1 = document.getElementById("sel-header-2");
+
+const hoveringHeaderDefault = selectedGmtHeader1.innerHTML;
+
+/** @type {HTMLHeadingElement} */
+const selectedGmtHour0 = document.getElementById("sel-gmt-hour-1");
+const selectedGmtHour1 = document.getElementById("sel-gmt-hour-2");
+
+/** @type {SVGTextElement} */
+const selectedGmtSvgText0 = document.getElementById("sel-gmt-1");
+const selectedGmtSvgText1 = document.getElementById("sel-gmt-2");
+
+
+const showSelectUiInPanel = () => {
+	showGmtWindow();
+
+	bottomWindow.style.pointerEvents = "auto";
+
+	hoverUi.style.display  = "none";
+	selectUi.style.display = "block";
+}
+
+const showHoverUiInPanel = () => {
+	bottomWindow.style.pointerEvents = "none";
+
+	hoverUi.style.display  = "block";
+	selectUi.style.display = "none";
+}
+
+showHoverUiInPanel();
 
 
 /** @type {HTMLDivElement} */
@@ -168,7 +209,7 @@ console.assert(!(debugMode && test), "shouldnt have both prod and debug mode")
 
 
 
-const hasLastHovered = 
+const hasLastHovered =
 () => lastHoveredDbg !== null
 
 const isHoveringNewShit =
@@ -208,53 +249,103 @@ const raycastRect = mainSvg.createSVGRect();
 /** @type {String} */
 let currentHoveringZone = null;
 
-const mouseEnterOcean = _ => {
-	const hadZone = currentHoveringZone !== null;
-	if (hadZone) {
-		resetZoneHighlight(currentHoveringZone);
-		currentHoveringZone = null;
-	}
+const undoHoverSelectMode = () => {
+	paintMapAsSelectMode();
 
-	gmtWindow.classList.remove("show");
-	gmtWindow.classList.add("hide");
+	resetSelectedGmtHour();
+	nullSvgGmtText(selectedGmtSvgText1);
+
+	setDefaultCursor();
 }
 
-const resetZoneHighlight = zoneName => {
-	const svgs = svgsByZone.get(zoneName);
-	console.assert(!!svgs)
+const hideGmtWindow = () => {
+	bottomWindow.classList.remove("show");
+	bottomWindow.classList.add("hide");
+}
 
+const showGmtWindow = () => {
+	bottomWindow.classList.remove("hide");
+	bottomWindow.classList.add("show");
+}
+
+const resetZoneAsHovered = zoneName => {
+	paintZoneNamed(zoneName, colorsByZone.get(zoneName));
+}
+
+/** * @param {Date} date */
+const formatDate = date => {
+	const hours   = date.getHours();
+	const minutes = date.getMinutes();
+	if (IS_12_HOUR_FORMAT) {
+		if (hours >= 12) {
+			return `${hours === 0 ? 12 : hours}:${twoDigs(minutes)}<span class="am"> PM</span>`;
+		} else {
+			return `${hours === 0 ? 12 : hours}:${twoDigs(minutes)}<span class="am"> AM</span>`;
+		}
+	}
+	return `${hours}:${twoDigs(minutes)}`
+}
+
+// TODO: move paint functions close together
+const applyZoneNameToSvgGmtText = (svgGmtText, zoneName, color) => {
+	svgGmtText.textContent = prettyZoneNamesByZone.get(zoneName);
+	svgGmtText.style.fill = color;
+}
+
+const nullSvgGmtText = svgGmtText => {
+	svgGmtText.textContent = "";
+}
+
+
+const setZoneAsHovered = zoneName => {
+	const brightColor = brightColorsByZone.get(zoneName);
+
+	const date = getDateTimeOf(zoneName);
+	gmtHourText.innerHTML = formatDate(date);
+
+	applyZoneNameToSvgGmtText(gmtText, zoneName, colorsByZone.get(zoneName));
+	paintZoneNamed(zoneName, brightColor);
+}
+
+const paintZoneNamed = (zoneName, color) => {
+	const svgs = svgsByZone.get(zoneName);
 	for (const svg of svgs) {
-		const color = colorsByZone.get(zoneName);
 		svg.style.fill = color;
 	}
 }
 
-const highlightZone = zoneName => {
-	const brightColor = brightColorsByZone.get(zoneName);
+const highlightZoneSelectMode = zoneName => {
+	// TODO: perf, check if had highlighted one before, unhighlight it
 
-	const date = getDateTimeOf(zoneName);
-	gmtHour.innerText = `${date.getHours()}:${twoDigs(date.getMinutes())}`
+	// TODO: WHITE STEPS IN BETWEEN THE TWO SELECTED ZONES
 
-	const color = colorsByZone.get(zoneName);
-	gmtText.textContent = prettyZoneNamesByZone.get(zoneName);
-	gmtText.style.fill = color;
+	// const highlightStartObj = sortedZonesData.find(data => data.name === selectModeData.startZoneName);
+	// const highlightEndObj = sortedZonesData.find(data => data.name === zoneName);
 
-	// gmtTextSvg.setAttribute("viewBox", `0 0 400 100`);
+	// const zoneStride = highlightEndObj.index - highlightStartObj.index;
+	// const incrementDirection = Math.sign(zoneStride);
 
+	// const startIndInclusive = highlightStartObj.index + incrementDirection;
+	// const endIndExclusive   = highlightStartObj.index + zoneStride;
 
-	const svgs = svgsByZone.get(zoneName);
-	console.assert(!!svgs)
-	for (const svg of svgs) {
-		svg.style.fill = brightColor;
-	}
+	// for (let i = startIndInclusive; i != endIndExclusive; i += incrementDirection) {
+	// 	const zoneName = sortedZonesData[i].name;
+	// 	paintZoneNamed(zoneName, "white");
+	// }
+
+	// paintZoneNamed(zoneName, selectModeColor);
+	paintZoneNamed(zoneName, colorsByZone.get(zoneName));
+	applyZoneNameToSvgGmtText(selectedGmtSvgText1, zoneName, colorsByZone.get(zoneName));
+
 }
 
 const MINS_TO_MILLIS = 60 * 1000;
 const getDateTimeOf = zoneName => {
 	const date = new Date();
-	const offset = date.getTimezoneOffset();
+	const offsetMins = date.getTimezoneOffset();
 
-	date.setTime(date.getTime() + offset * MINS_TO_MILLIS);
+	// here, date is UTC
+	date.setTime(date.getTime() + offsetMins * MINS_TO_MILLIS);
 
 	const minsIncrement = timeIncrementHoursByZone.get(zoneName) * 60;
 	date.setTime(date.getTime() + minsIncrement * MINS_TO_MILLIS);
@@ -262,31 +353,84 @@ const getDateTimeOf = zoneName => {
 	return date;
 }
 
-const mouseEnterCountryPath = path => {
-	// check if path is flagged as clicked
+const setDefaultCursor = () => {
+	document.body.style.cursor = "default";
+}
 
-	// console.log(`entered path ${path}`);
-	const timezoneAttrib = path.getAttribute(ZONE);
-	console.assert(!!timezoneAttrib, "should only capture enter path on timezoned area")
+const setPointerCursor = () => {
+	document.body.style.cursor = "pointer";
+}
+
+
+const mouseClickOcean = () => {
+	if (isSelectMode()) {
+		exitSelectMode();
+		hideGmtWindow();
+	}
+}
+
+const mouseEnterOcean = () => {
+	if (isSelectMode()) {
+		undoHoverSelectMode();
+		return;
+	}
+
+	setDefaultCursor();
+	
+	const hadZone = currentHoveringZone !== null;
+	if (hadZone) {
+		resetZoneAsHovered(currentHoveringZone);
+		currentHoveringZone = null;
+	}
+
+	hideGmtWindow();
+}
+
+
+// this will be called in between states of the same country, so it's not a "mouseEnterZone"
+// TODO: perf, call based on "mouseEnterDifferentZone" no need to call for every country path
+const mouseEnterCountryPath = path => {
+
+	const zoneName = path.getAttribute(ZONE);
+	console.assert(!!zoneName, "should only capture enter path on timezoned area")
+
+	if (isSelectMode()) {
+		const hoveringStartZone = zoneName === selectModeData.startZoneName;
+		if (hoveringStartZone) {
+			undoHoverSelectMode();
+			return;
+		}
+
+		paintMapAsSelectMode();
+		highlightZoneSelectMode(zoneName);
+		setPointerCursor();
+
+		const date = getDateTimeOf(zoneName);
+		selectedGmtHour1.innerHTML = formatDate(date);
+		selectedGmtHeader1.innerHTML = hoveringHeaderDefault;
+
+		return;
+	}
+
+	setPointerCursor();
 
 	const hadZone = currentHoveringZone !== null;
-	const newZoneIsDifferentFromLastOne = currentHoveringZone !== timezoneAttrib;
+	const newZoneIsDifferentFromLastOne = currentHoveringZone !== zoneName;
 
 	if (newZoneIsDifferentFromLastOne) {
 		if (hadZone) {
 			// console.log(`reset highlight from zone ${currentHoveringZone}`);
-			resetZoneHighlight(currentHoveringZone);
+			resetZoneAsHovered(currentHoveringZone);
 		}
 		// console.log(`highlight zone ${timezoneAttrib}`);
 
-		currentHoveringZone = timezoneAttrib;
-		highlightZone(timezoneAttrib);
+		currentHoveringZone = zoneName;
+		setZoneAsHovered(zoneName);
 	}
 
 	// console.log(`same zone as before to ${timezoneAttrib}`);
 	// gmtWindow.style.display = "block";
-	gmtWindow.classList.remove("hide");
-	gmtWindow.classList.add("show");
+	showGmtWindow();
 }
 
 const twoDigs = num => {
@@ -295,25 +439,90 @@ const twoDigs = num => {
 };
 
 
-// TODO: Implement
-const clickedPaths = [];
-
-let startZone = null;
-let endinZone = null;
+/** @type {{ is: Number, startZoneName: String }} */
+const selectModeData = {
+	is: false,
+	startZoneName: null,
+}
+const isSelectMode = () => selectModeData.is;
 
 
 const mouseClickZone = path => {
-	const timezoneAttrib = path.getAttribute(ZONE);
-	console.assert(!!timezoneAttrib, "should only capture click on timezoned area")
-	
-	const rawIncrement = timeIncrementHoursByZone.get(timezoneAttrib);
+	const zoneName = path.getAttribute(ZONE);
+	console.assert(!!zoneName, "should only capture click on timezoned area")
 
-	const incrementHours = Math.trunc(rawIncrement);
-	const incrementMins  = rawIncrement % 1 * 60.0;
-
-	const col = colorsByZone.get(timezoneAttrib);
-	console.log(`clicked zone %c${timezoneAttrib}%c\nincrement of ${incrementHours}:${twoDigs(incrementMins%60)} (raw '${rawIncrement}')`, `color: ${col}`, `\\x1b[0m`);
+	enterSelectModeWithZone(zoneName);
 }
+
+const resetSelectedGmtHour = () => {
+	selectedGmtHour1.innerHTML = "";
+	selectedGmtHeader1.innerHTML = "";
+	nullSvgGmtText(selectedGmtSvgText1);
+}
+
+const enterSelectModeWithZone = zoneName => {
+	selectModeData.is = true;
+	selectModeData.startZoneName = zoneName;
+	setDefaultCursor();
+	showSelectUiInPanel();
+
+	const date = getDateTimeOf(zoneName);
+	selectedGmtHour0.innerHTML = formatDate(date);
+	applyZoneNameToSvgGmtText(selectedGmtSvgText0, zoneName, selectModeColor);
+	// console.log(`selected zone ${zoneName}, (${date.getHours()}:${twoDigs(date.getMinutes())})`);
+
+	resetSelectedGmtHour();
+
+	paintMapAsSelectMode();
+}
+
+const exitSelectMode = () => {
+	selectModeData.is = false;
+	// selectModeData.startZone = null;
+
+	setDefaultCursor();
+	showHoverUiInPanel();
+
+	paintMapAsDefaultMode();
+}
+
+const paintMapAsDefaultMode = () => {
+	colorTimezones();
+}
+
+const colorTimezones = () => {
+	for (const [ zoneName, paths ] of svgsByZone) {
+		const col = colorsByZone.get(zoneName);
+
+		for (const path of paths) {
+			path.style.fill = col;				
+		}
+	}
+}
+
+const paintMapAsSelectMode = () => {
+	for (const [ zone, pathArr ] of svgsByZone) {
+
+		if (zone !== selectModeData.startZoneName) {
+			for (const path of pathArr) {
+				// path.style.fill = countryColor;
+				path.style.fill = unlitColorsByZone.get(zone);
+				// path.style.fill = colorsByZone.get(zone);
+			}
+
+		} else {
+			for (const path of pathArr) {
+				path.style.fill = selectModeColor;
+				// path.style.fill = colorsByZone.get(zone);
+			}
+
+		}
+	}
+}
+
+
+
+
 
 
 const clampViewBoxXyToScreen = () => {
@@ -441,11 +650,13 @@ document.addEventListener("mousemove", evt => {
 });
 
 const countryColor = "rgb(179, 179, 179)";
+const selectModeColor = "rgb(119, 7, 247)";
 
+// DEBUG MODE
 const hoveredColor = "rgb(255, 128, 0)";
-
 const alreadyAccountedForHoveredColor = "rgb(200, 158, 0)";
 const clickedColor = "rgb(255, 0, 0)";
+
 
 const LEFT_BTN   = 0;
 const MIDDLE_BTN = 1;
@@ -486,7 +697,6 @@ document.addEventListener("mouseup", evt => {
 
 			console.log(" ");
 
-
 			// console.log(`shift + down LEFT_BTN`);
 			// lastThing.group = null;
 			return;
@@ -503,7 +713,6 @@ document.addEventListener("mouseup", evt => {
 			}
 
 			const ind = allClickedParts.indexOf(currentHoveringDbg);
-
 			allClickedParts.splice(ind, 1);
 
 			currentHoveringDbg.style.fill = countryColor;
@@ -532,9 +741,16 @@ document.addEventListener("mouseup", evt => {
 		return;
 	}
 
-
 });
 
+bottomWindow.addEventListener("mouseenter", _ => {
+	if (isSelectMode()) {
+		undoHoverSelectMode();
+		return;
+	}
+});
+
+closeSelectModeButton.addEventListener("click", _ => exitSelectMode());
 
 requestAnimationFrame(applyPanning);
 
@@ -546,5 +762,9 @@ export {
 
 	svgJsRoot,
 
-	mouseEnterCountryPath, mouseEnterOcean, mouseClickZone as mouseClickPath,
+	mouseEnterCountryPath, mouseEnterOcean, mouseClickZone, mouseClickOcean,
+
+	colorTimezones,
+
+	enterSelectModeWithZone,
 };
